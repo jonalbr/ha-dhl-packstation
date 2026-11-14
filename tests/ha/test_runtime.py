@@ -7,7 +7,11 @@ from unittest.mock import patch
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant.common import async_fire_time_changed
+
+try:
+    from pytest_homeassistant.common import async_fire_time_changed
+except ModuleNotFoundError:
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.dhl_packstation_monitor.const import CONF_INTERVAL, CONF_MAX_AGE
 from custom_components.dhl_packstation_monitor.diagnostics import (

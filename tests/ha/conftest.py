@@ -4,7 +4,11 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+
+try:
+    from pytest_homeassistant.common import MockConfigEntry
+except ModuleNotFoundError:
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.dhl_packstation_monitor.api import PackstationClient
 from custom_components.dhl_packstation_monitor.const import (
@@ -17,6 +21,11 @@ from custom_components.dhl_packstation_monitor.models import (
     normalize_location,
     parse_observation,
 )
+
+
+@pytest.fixture(autouse=True)
+def custom_integrations(enable_custom_integrations):
+    """Enable local integrations in both generations of the HA test plugin."""
 
 
 @pytest.fixture

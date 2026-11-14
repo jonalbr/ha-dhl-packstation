@@ -1,6 +1,7 @@
 # Separate live check
 
-Checked on 2026-11-14 with Home Assistant 2026.11.1 and its pinned frontend.
+Checked on 2026-11-15 with Home Assistant 2026.9.0 and 2026.11.1, each with its
+matching pinned frontend (20260826.4 and 20261028.5).
 This is separate from the mocked automated tests and is not long-term field validation.
 
 - A disposable instance bound only to localhost; no production Home Assistant changes.
@@ -12,7 +13,8 @@ This is separate from the mocked automated tests and is not long-term field vali
 - Native search UI selected the home location, cleared it with one click and accepted Hamburg.
 - Optional per-size capacities were saved through reconfiguration and shown in the native editor.
 - Clearing S in that editor removed only S and retained the other capacities after reload.
-- The instance was stopped after verification; its data remain in ignored `.smoke/`.
+- Each instance was stopped after verification; artifacts remain under ignored
+  `.smoke/2026.9.0/` and `.smoke/2026.11.1/`.
 
 Observed rows were `S 23 · M 22 · L 10 · XL 4` and `S 9 · M 2 · L 6 · XL 0`.
 These are observations at test time, not current availability or reservations.
