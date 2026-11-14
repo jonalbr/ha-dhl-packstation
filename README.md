@@ -168,12 +168,5 @@ under Devices & services. Uninstall its repository in the Marketplace and restar
 Home Assistant. Manual installations can remove the component folder after deleting
 the entry, then restart. Home Assistant manages previously recorded history separately.
 
-## Development
-
-See [development](DEVELOPMENT.md), [release procedure](RELEASING.md) and the
-[internal quality assessment](docs/quality-scale.md). AI tools assisted with code,
-tests and documentation. The implementation follows current Home Assistant interfaces
-and the development practices used in Tado Overlay Metadata.
-
 ## License
 [MIT](LICENSE). This is an independent community integration, not an official DHL product.
