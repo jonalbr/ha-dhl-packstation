@@ -26,9 +26,7 @@ def release_repo(tmp_path, monkeypatch):
         "uv.lock",
         "DEVELOPMENT.md",
         "RELEASING.md",
-        "tests/compat/pyproject.toml",
     ):
-        (root / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source / name, root / name)
     for name in ("scripts", "custom_components", "examples"):
         shutil.copytree(
