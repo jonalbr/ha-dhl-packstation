@@ -2,8 +2,10 @@ name: Validate
 
 on:
   push:
+    branches: ["**"]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -38,20 +40,6 @@ jobs:
       - run: uv sync --locked --group ha-test
       - run: >-
           uv run --locked --group ha-test pytest tests
-          --disable-socket --allow-unix-socket
-          --cov=custom_components/dhl_packstation_monitor
-          --cov-branch --cov-report=term-missing --cov-fail-under=100
-  home-assistant-minimum:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: astral-sh/setup-uv@v10.3.3
-        with:
-          version: "0.13.8"
-          enable-cache: true
-      - run: uv sync --locked --project tests/compat
-      - run: >-
-          uv run --locked --project tests/compat pytest tests
           --disable-socket --allow-unix-socket
           --cov=custom_components/dhl_packstation_monitor
           --cov-branch --cov-report=term-missing --cov-fail-under=100

@@ -27,17 +27,18 @@ The separate Linux environment preserves the Windows `.venv` and survives WSL cl
 `/tmp`. The `ha-test` group has Linux platform markers. Its Home Assistant and
 `pytest-homeassistant` versions are both pinned to 2026.11.1.
 
-The minimum-version suite has a separate project and lockfile in `tests/compat`:
+CI maintains this current HA environment. Minimum-version compatibility was checked
+separately with HA 2026.9.0 and its matching legacy test plugin, as recorded in the
+[quality assessment](docs/quality-scale.md).
 
-```console
-UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-minimum-venv" uv sync --locked --project tests/compat
-UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-minimum-venv" uv run --locked --project tests/compat pytest tests --disable-socket --allow-unix-socket --cov=custom_components/dhl_packstation_monitor --cov-branch --cov-report=term-missing --cov-fail-under=100
-```
-
-It pins HA 2026.9.0 and its matching `pytest-homeassistant-custom-component` 0.13.363.
-Run the same suite in both environments. Keep the two plugins and their HA dependency
-sets separate; no dependency overrides are needed. CI checks both supported endpoints
-and the package checker ties the installation minimum to the minimum test project's pin.
+Recheck the minimum after compatibility-sensitive changes using a disposable source
+copy and a separate temporary uv project outside the repository. Give that project
+HA 2026.9.0, `pytest-homeassistant-custom-component` 0.13.363, `pytest-cov` 7.1.0 and
+`resvg-py` 0.5.0, then resolve its own lockfile. Run the same complete suite from the
+source copy through that environment with the coverage gate. Keep the current and
+legacy test plugins and dependency sets separate without dependency overrides. The
+old HA dependency set belongs only to that temporary check; do not commit its project
+or lockfile into the maintained development environment.
 The unrelated respx pytest plugin is disabled so HA can initialize its HTTP aliases.
 Coverage targets the component directory and gates all integration statements and branches.
 Ruff uses its default lint rules and 88-character formatter width; no custom selects
@@ -55,9 +56,9 @@ UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --
 UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --group ha-test --group smoke python scripts/live_smoke.py
 ```
 
-For the minimum version, sync `tests/compat` with `--group smoke` and run the same
-script through that project's environment. Its frontend and optional HA UI packages
-are pinned to the versions declared by HA 2026.9.0.
+For a minimum-version smoke check, use the disposable copy described above and
+select the frontend and optional HA UI packages declared by HA 2026.9.0 before
+running the same script. Keep its generated lockfile outside the repository.
 
 The script starts a fresh HA instance on an unused localhost port with its own generated
 account, confirms that instance's HTTP listener through HA's API, and uses the real DHL

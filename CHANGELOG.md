@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Support Home Assistant 2026.9.0 and later, tested at the minimum and 2026.11.1.
+- Publish releases automatically from matching version tags after all checks pass.
 - Find Packstations by address or postal code and review several locations before setup.
 - Manage stations as subentries with individual devices, seven entities and stable identities.
 - Configure shared polling and source-age limits; edit station names without changing identity.
