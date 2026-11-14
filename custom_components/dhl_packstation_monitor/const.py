@@ -8,6 +8,7 @@ CONF_INTERVAL = "scan_interval_minutes"
 CONF_MAX_AGE = "max_age_minutes"
 DEFAULT_INTERVAL = 15
 DEFAULT_MAX_AGE = 60
+CONF_DISPLAY_CAPACITIES = "display_capacities"
 SIZES = {
     "s": "freeCompartmentsS",
     "m": "freeCompartmentsM",

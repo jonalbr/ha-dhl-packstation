@@ -42,9 +42,7 @@ class CompartmentSensor(StationEntity, SensorEntity):
     def extra_state_attributes(self):
         attributes = super().extra_state_attributes
         if self.size == "total":
-            attributes["compartment_summary"] = self.coordinator.snapshot.summary(
-                self.coordinator.usable
-            )
+            attributes.update(self.summary_attributes())
         return attributes
 
 

@@ -1,6 +1,7 @@
 """Validate identity, unknown values and source freshness."""
 
 from copy import deepcopy
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -9,7 +10,9 @@ from custom_components.dhl_packstation_monitor.models import (
     InvalidResponse,
     Station,
     StationNotFound,
+    normalize_capacities,
     normalize_location,
+    parse_capacity,
     parse_observation,
     parse_search,
     parse_station,
@@ -113,3 +116,56 @@ def test_no_live_data_is_still_station(payload):
     payload["liveStatus"] = []
     with pytest.raises(InvalidResponse):
         parse_observation(payload, payload["primaryKeyPF"])
+
+
+def test_optional_display_capacities():
+    assert normalize_capacities({"s": 12.0, "m": 0, "xl": None, "other": 99}) == {"s": 12, "m": 0}
+    assert normalize_capacities({}) == {}
+
+
+@pytest.mark.parametrize("value", [True, "12", -1, 1.5, 1001, float("nan"), float("inf")])
+def test_invalid_display_capacities(value):
+    with pytest.raises(ValueError):
+        normalize_capacities({"s": value})
+
+
+@pytest.mark.parametrize(
+    "items,expected",
+    [
+        (None, None),
+        ({}, None),
+        ([], None),
+        ([None, {"type": "model"}], None),
+        ([{"type": "capacity", "content": "103"}], 103),
+        ([{"type": "capacity", "content": 103}], 103),
+        ([{"type": "capacity", "content": "0"}], None),
+        ([{"type": "capacity", "content": "bad"}], None),
+        ([{"type": "capacity", "content": True}], None),
+        ([{"type": "capacity", "content": 0}], None),
+        ([{"type": "capacity", "content": "103"}, {"type": "capacity", "content": "103"}], 103),
+        ([{"type": "capacity", "content": "103"}, {"type": "capacity", "content": "104"}], None),
+    ],
+)
+def test_reported_station_capacity(items, expected):
+    assert parse_capacity({"pfOtherinfos": items}) == expected
+
+
+def test_three_display_variants_preserve_observations(payload):
+    observation = parse_observation(payload, payload["primaryKeyPF"])
+    assert observation.summary(True) == "S 3 · M 0 · L 2 · XL 1"
+    assert observation.total_summary(True) == "Σ 6/12 · S 3 · M 0 · L 2 · XL 1"
+    assert observation.capacity_summary(True, {"s": 4, "m": 0, "l": 3, "xl": 5}) == (
+        "S 3/4 · M 0/0 · L 2/3 · XL 1/5"
+    )
+    assert observation.capacity_summary(True, {}) == "S 3/— · M 0/— · L 2/— · XL 1/—"
+    assert observation.capacity_summary(False, {"s": 4}) == "S —/4 · M —/— · L —/— · XL —/—"
+    assert observation.capacity_summary(True, {"s": 1}) == "S 3/— · M 0/— · L 2/— · XL 1/—"
+    assert observation.capacity_issues(True, {"s": 1}) == ["s"]
+    assert observation.problem(datetime.now(UTC), timedelta(hours=1)) is None
+    assert observation.counts["s"] == 3
+    assert replace(observation, total_capacity=5).total_summary(True).startswith("Σ 6/—")
+    assert replace(observation, total_capacity=None).total_summary(True).startswith("Σ 6/—")
+    partial = replace(observation, counts={**observation.counts, "s": None})
+    assert partial.total_summary(True).startswith("Σ —/12")
+    assert partial.capacity_issues(True, {"s": 1}) == []
+    assert observation.total_summary(False) == "Σ —/12 · S — · M — · L — · XL —"

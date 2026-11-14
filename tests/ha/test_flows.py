@@ -3,11 +3,17 @@
 from types import MappingProxyType
 from unittest.mock import patch
 
+import probatio
 import pytest
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.dhl_packstation_monitor.const import CONF_INTERVAL, CONF_MAX_AGE, DOMAIN
+from custom_components.dhl_packstation_monitor.const import (
+    CONF_DISPLAY_CAPACITIES,
+    CONF_INTERVAL,
+    CONF_MAX_AGE,
+    DOMAIN,
+)
 from custom_components.dhl_packstation_monitor.models import (
     InvalidResponse,
     PackstationError,
@@ -235,3 +241,111 @@ async def test_options_defaults_validation_and_save(hass, entry_factory):
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {CONF_INTERVAL: 30, CONF_MAX_AGE: 90}
+
+
+@pytest.mark.parametrize(
+    "language,label",
+    [("en", "Home location (Home Assistant)"), ("de", "Heimstandort (Home Assistant)")],
+)
+async def test_home_location_suggested_clearable_and_only_sent_on_submit(
+    hass, api, language, label
+):
+    hass.config.language = language
+    hass.config.latitude, hass.config.longitude = 52.52, 13.39
+    result = await start(hass)
+    field = next(iter(result["data_schema"].schema))
+    assert field.description["suggested_value"] == label
+    assert isinstance(field, probatio.Optional)
+    selector = result["data_schema"].schema[field]
+    assert selector.config["custom_value"]
+    api.search.assert_not_called()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"address": label})
+    api.search.assert_awaited_once_with("52.520000,13.390000")
+    assert result["step_id"] == "select"
+
+
+@pytest.mark.parametrize(
+    "latitude,longitude",
+    [
+        (0, 0),
+        (None, 13),
+        (52, None),
+        (True, 13),
+        (float("nan"), 13),
+        (52, float("inf")),
+        (91, 13),
+        (52, 181),
+    ],
+)
+async def test_missing_or_invalid_home_location_is_not_suggested(hass, api, latitude, longitude):
+    hass.config.latitude, hass.config.longitude = latitude, longitude
+    result = await start(hass)
+    field = next(iter(result["data_schema"].schema))
+    assert not field.description
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": "Home location (Home Assistant)"}
+    )
+    assert result["errors"] == {"base": "invalid_address"}
+    api.search.assert_not_called()
+
+
+async def test_cleared_home_stays_empty_then_accepts_another_address(hass, api):
+    hass.config.latitude, hass.config.longitude = 52.52, 13.39
+    result = await start(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] == {"base": "invalid_address"}
+    field = next(iter(result["data_schema"].schema))
+    assert not field.description
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": "Hamburg"}
+    )
+    api.search.assert_awaited_once_with("Hamburg")
+    assert result["step_id"] == "select"
+
+
+async def test_optional_capacities_can_be_added_changed_and_cleared(hass, api, entry_factory):
+    entry = entry_factory()
+    subentry = next(iter(entry.subentries.values()))
+
+    async def edit(values):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, "station"),
+            context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+        )
+        return await hass.config_entries.subentries.async_configure(result["flow_id"], values)
+
+    result = await edit({"name": "Near home", CONF_DISPLAY_CAPACITIES: {"s": 12, "m": 0}})
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_DISPLAY_CAPACITIES] == {"s": 12, "m": 0}
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    # Suggested values do not become schema defaults, so clearing removes them.
+    capacity_field = next(
+        key for key in result["data_schema"].schema if key.schema == CONF_DISPLAY_CAPACITIES
+    )
+    section_schema = result["data_schema"].schema[capacity_field]
+    assert section_schema.options["collapsed"]
+    suggested = {
+        field.schema: field.description["suggested_value"]
+        for field in section_schema.schema.schema
+        if field.description
+    }
+    assert suggested == {"s": 12, "m": 0}
+    assert section_schema({}) == {}
+    await hass.config_entries.subentries.async_configure(result["flow_id"], {"name": "Near home"})
+    assert subentry.data[CONF_DISPLAY_CAPACITIES] == {}
+
+
+async def test_fractional_manual_capacity_reports_validation_error(hass, api, entry_factory):
+    entry = entry_factory()
+    subentry = next(iter(entry.subentries.values()))
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station"),
+        context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"name": "Near home", CONF_DISPLAY_CAPACITIES: {"s": 1.5}}
+    )
+    assert result["errors"] == {"base": "invalid_capacities"}

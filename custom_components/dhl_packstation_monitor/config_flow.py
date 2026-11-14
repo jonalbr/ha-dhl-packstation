@@ -1,10 +1,12 @@
 """Find, preview and manage independently identified Packstations."""
 
 from datetime import UTC, datetime, timedelta
+from math import isfinite
 
 import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigSubentryFlow, OptionsFlow
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -14,9 +16,11 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     TextSelector,
 )
+from homeassistant.helpers.translation import async_get_translations
 
 from .api import PackstationClient
 from .const import (
+    CONF_DISPLAY_CAPACITIES,
     CONF_INTERVAL,
     CONF_MAX_AGE,
     DEFAULT_INTERVAL,
@@ -24,7 +28,7 @@ from .const import (
     DOMAIN,
     NAME,
 )
-from .models import Observation, PackstationError
+from .models import Observation, PackstationError, normalize_capacities
 
 
 class StationSteps:
@@ -53,10 +57,32 @@ class StationSteps:
             return set()
         return {sub.unique_id for sub in self._get_entry().subentries.values()}
 
+    def _home_coordinates(self):
+        latitude, longitude = self.hass.config.latitude, self.hass.config.longitude
+        if (
+            type(latitude) not in (int, float)
+            or type(longitude) not in (int, float)
+            or not isfinite(latitude)
+            or not isfinite(longitude)
+            or not -90 <= latitude <= 90
+            or not -180 <= longitude <= 180
+            or (latitude, longitude) == (0, 0)
+        ):
+            return None
+        return f"{latitude:.6f},{longitude:.6f}"
+
     async def async_step_search(self, user_input=None):
         errors = {}
+        home_coordinates = self._home_coordinates()
+        translations = await async_get_translations(
+            self.hass, self.hass.config.language, "selector", {DOMAIN}
+        )
+        # The native custom-value picker renders the selected value verbatim.
+        home_label = translations[f"component.{DOMAIN}.selector.search_location.options.home"]
         if user_input is not None:
-            address = user_input["address"].strip()
+            address = user_input.get("address", "").strip()
+            if address == home_label:
+                address = home_coordinates or ""
             if not address or len(address) > 300:
                 errors["base"] = "invalid_address"
             else:
@@ -77,7 +103,21 @@ class StationSteps:
         return self.async_show_form(
             step_id="search",
             errors=errors,
-            data_schema=probatio.Schema({probatio.Required("address"): TextSelector()}),
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Optional("address"): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[home_label] if home_coordinates else [],
+                                custom_value=True,
+                            )
+                        ),
+                    }
+                ),
+                user_input
+                if user_input is not None
+                else ({"address": home_label} if home_coordinates else {}),
+            ),
         )
 
     async def async_step_direct(self, user_input=None):
@@ -248,7 +288,10 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
         errors = {}
         if user_input is not None:
             try:
+                capacities = normalize_capacities(user_input.get(CONF_DISPLAY_CAPACITIES, {}))
                 observation = await self._client().station(subentry.unique_id)
+            except ValueError:
+                errors["base"] = "invalid_capacities"
             except PackstationError as err:
                 errors["base"] = err.code
             else:
@@ -257,16 +300,39 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
                     self._get_entry(),
                     subentry,
                     title=name,
-                    data={"station": observation.station.to_data()},
+                    data={
+                        "station": observation.station.to_data(),
+                        CONF_DISPLAY_CAPACITIES: capacities,
+                    },
                 )
         return self.async_show_form(
             step_id="reconfigure",
             errors=errors,
             description_placeholders={"station": subentry.title},
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required("name", default=subentry.title): TextSelector(),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required("name", default=subentry.title): TextSelector(),
+                        probatio.Optional(CONF_DISPLAY_CAPACITIES): section(
+                            probatio.Schema(
+                                {
+                                    probatio.Optional(size): NumberSelector(
+                                        NumberSelectorConfig(
+                                            min=0, max=1000, step=1, mode=NumberSelectorMode.BOX
+                                        )
+                                    )
+                                    for size in ("s", "m", "l", "xl")
+                                }
+                            ),
+                            {"collapsed": True},
+                        ),
+                    }
+                ),
+                user_input
+                if user_input is not None
+                else {
+                    CONF_DISPLAY_CAPACITIES: dict(subentry.data.get(CONF_DISPLAY_CAPACITIES, {})),
+                },
             ),
         )
 

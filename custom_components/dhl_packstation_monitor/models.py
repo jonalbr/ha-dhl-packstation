@@ -3,6 +3,7 @@
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from math import isfinite
 from typing import Any
 
 from .const import SIZES
@@ -49,6 +50,41 @@ def normalize_location(postal_code: str, number: str) -> tuple[str, str]:
 def text(value: Any) -> str:
     """Keep only bounded strings from external data."""
     return value[:300].strip() if isinstance(value, str) else ""
+
+
+def normalize_capacities(values: dict) -> dict[str, int]:
+    """User-entered display metadata must never replace live compartment counts."""
+    result = {}
+    for size in SIZES:
+        value = values.get(size)
+        if value is None:
+            continue
+        if (
+            type(value) not in (int, float)
+            or not isfinite(value)
+            or int(value) != value
+            or not 0 <= value <= 1000
+        ):
+            raise ValueError("invalid_capacities")
+        result[size] = int(value)
+    return result
+
+
+def parse_capacity(payload: dict) -> int | None:
+    """Read the station-wide capacity only; DHL exposes no per-size totals."""
+    items = payload.get("pfOtherinfos")
+    if not isinstance(items, list):
+        return None
+    capacities = set()
+    for item in items:
+        if not isinstance(item, dict) or item.get("type") != "capacity":
+            continue
+        value = item.get("content")
+        if type(value) is int and value > 0:
+            capacities.add(value)
+        elif isinstance(value, str) and re.fullmatch(r"[0-9]{1,6}", value) and int(value) > 0:
+            capacities.add(int(value))
+    return capacities.pop() if len(capacities) == 1 else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +195,7 @@ class Observation:
     station: Station
     counts: dict[str, int | None]
     source_timestamp: datetime | None
+    total_capacity: int | None = None
 
     def fresh(self, now: datetime, max_age: timedelta) -> bool:
         return self.source_timestamp is not None and (
@@ -179,6 +216,35 @@ class Observation:
     def summary(self, usable: bool) -> str:
         return " · ".join(
             f"{size.upper()} {value if usable and value is not None else '—'}"
+            for size, value in self.counts.items()
+        )
+
+    def total_summary(self, usable: bool) -> str:
+        free = (
+            sum(self.counts.values())
+            if usable and all(value is not None for value in self.counts.values())
+            else None
+        )
+        capacity = self.total_capacity
+        if free is not None and capacity is not None and free > capacity:
+            capacity = None
+        return (
+            f"Σ {free if free is not None else '—'}/"
+            f"{capacity if capacity is not None else '—'} · {self.summary(usable)}"
+        )
+
+    def capacity_issues(self, usable: bool, capacities: dict[str, int]) -> list[str]:
+        return [
+            size
+            for size, capacity in capacities.items()
+            if usable and self.counts[size] is not None and self.counts[size] > capacity
+        ]
+
+    def capacity_summary(self, usable: bool, capacities: dict[str, int]) -> str:
+        issues = self.capacity_issues(usable, capacities)
+        return " · ".join(
+            f"{size.upper()} {value if usable and value is not None else '—'}/"
+            f"{capacities[size] if size in capacities and size not in issues else '—'}"
             for size, value in self.counts.items()
         )
 
@@ -203,4 +269,4 @@ def parse_observation(payload: object, expected_key: str) -> Observation:
                 timestamp = parsed.astimezone(UTC)
         except ValueError, OverflowError:
             pass
-    return Observation(station, counts, timestamp)
+    return Observation(station, counts, timestamp, parse_capacity(payload))

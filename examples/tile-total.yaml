@@ -1,0 +1,9 @@
+# Σ is free compartments / DHL-reported capacity of the whole station.
+type: tile
+entity: binary_sensor.replace_with_your_station_data_problem
+name: Packstation 407
+icon: mdi:package-variant-closed
+color: amber
+state_content: compartment_total_summary
+tap_action:
+  action: more-info

@@ -8,14 +8,16 @@ assets use the supported custom-integration mechanism. Actions, triggers and con
 are exempt because the integration provides none. Setup validates every station without
 making unrelated stations unavailable when a read fails.
 
-Verification on 2026-11-14: 42 portable tests pass on Windows; 29 tests pass against
+Verification on 2026-11-14: 63 portable tests pass on Windows; 43 tests pass against
 Home Assistant 2026.11.1 with its matching pytest-homeassistant package. Config-flow
 statement and branch coverage are both 100%. Runtime tests cover devices, subentry
 links, stable identities, partial data, independent failures, expiry without requests,
-recovery, one reload per change and complete unload.
+recovery, one reload per change and complete unload. Additional flow tests cover
+home-location defaults, missing coordinates, clearing and replacing the search,
+optional capacity editing, validation and removal. Display metadata cannot alter counts.
 
-The combined 71-test Linux run covers all integration modules with 100% statements
-and branches (490 statements, 118 branches). The framework CI job enforces this
+The combined 106-test Linux run covers all integration modules with 100% statements
+and branches (549 statements, 140 branches). The framework CI job enforces this
 combined coverage threshold; the portable Windows/Linux jobs remain separate.
 
 Portable and framework checks, HACS validation and hassfest run separately in CI.

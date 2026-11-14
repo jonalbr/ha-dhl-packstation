@@ -24,6 +24,7 @@ jobs:
       - run: uv run pytest --ignore=tests/ha
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - run: uv run python scripts/build_brand.py --check
       - run: uv run python scripts/check_release.py
       - run: uv run python scripts/build_release.py
   home-assistant:

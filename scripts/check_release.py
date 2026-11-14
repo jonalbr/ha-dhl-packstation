@@ -35,6 +35,7 @@ def check():
     assert english == json.loads((COMPONENT / "strings.json").read_text(encoding="utf-8"))
     german = json.loads((COMPONENT / "translations/de.json").read_text(encoding="utf-8"))
     assert keys(english) == keys(german)
+    assert (COMPONENT / "brand/icon.svg").is_file()
     for name, size in (("icon.png", 256), ("icon@2x.png", 512)):
         image = (COMPONENT / "brand" / name).read_bytes()
         assert image[:8] == b"\x89PNG\r\n\x1a\n"
@@ -47,6 +48,8 @@ def check():
         "DEVELOPMENT.md",
         "RELEASING.md",
         "examples/tile.yaml",
+        "examples/tile-total.yaml",
+        "examples/tile-capacities.yaml",
     ):
         assert (ROOT / name).is_file(), name
     assert version in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")

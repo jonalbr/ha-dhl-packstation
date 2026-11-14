@@ -17,6 +17,7 @@ def payload():
         "houseNo": "31",
         "locationName": "",
         "geoPosition": {"distance": 51},
+        "pfOtherinfos": [{"type": "capacity", "content": "12"}],
         "liveStatus": {
             "freeCompartmentsS": 3,
             "freeCompartmentsM": 0,

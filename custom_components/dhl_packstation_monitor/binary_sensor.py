@@ -33,5 +33,5 @@ class DataProblemSensor(StationEntity, BinarySensorEntity):
         return {
             **super().extra_state_attributes,
             "reason": self.coordinator.problem,
-            "compartment_summary": self.coordinator.snapshot.summary(self.coordinator.usable),
+            **self.summary_attributes(),
         }
