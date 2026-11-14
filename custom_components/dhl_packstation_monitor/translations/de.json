@@ -1,0 +1,197 @@
+{
+  "title": "DHL Packstation Monitor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Packstationen hinzufügen",
+        "description": "Adresse suchen oder eine konkrete Packstation eingeben. Kein DHL-Konto erforderlich.",
+        "menu_options": {
+          "search": "Adresse oder Postleitzahl suchen",
+          "direct": "Postleitzahl und Stationsnummer"
+        }
+      },
+      "search": {
+        "title": "Packstationen suchen",
+        "description": "Die Suche wird an DHL gesendet und nicht gespeichert.",
+        "data": {
+          "address": "Adresse oder Postleitzahl"
+        }
+      },
+      "direct": {
+        "title": "Konkrete Packstation",
+        "data": {
+          "postal_code": "Postleitzahl des Standorts",
+          "station_number": "Packstationsnummer"
+        }
+      },
+      "select": {
+        "title": "Stationen auswählen",
+        "data": {
+          "stations": "Packstationen"
+        }
+      },
+      "confirm": {
+        "title": "Standorte prüfen und bestätigen",
+        "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.",
+        "data": {
+          "stations": "Bestätigte Stationen"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "DHL ist nicht erreichbar. Bitte später erneut versuchen.",
+      "station_not_found": "DHL hat diese konkrete Packstation nicht gefunden.",
+      "invalid_response": "DHL hat unerwartete Daten geliefert. Bitte später erneut versuchen.",
+      "rate_limited": "DHL begrenzt die Abfragen. Bitte vor einem weiteren Versuch warten.",
+      "invalid_address": "Adresse oder Postleitzahl mit höchstens 300 Zeichen eingeben.",
+      "invalid_location": "Fünfstellige Postleitzahl und positive Stationsnummer mit bis zu vier Ziffern eingeben.",
+      "no_stations": "Keine neuen Packstationen gefunden. Adresse präzisieren oder Stationsnummer verwenden.",
+      "no_selection": "Mindestens eine Station auswählen.",
+      "already_configured": "Diese Packstation ist bereits eingerichtet.",
+      "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen."
+    },
+    "abort": {
+      "already_configured": "DHL Packstation Monitor ist bereits eingerichtet. Weitere Stationen im vorhandenen Eintrag hinzufügen."
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "step": {
+        "user": {
+          "title": "Packstationen hinzufügen",
+          "description": "Adresse suchen oder eine konkrete Packstation eingeben. Kein DHL-Konto erforderlich.",
+          "menu_options": {
+            "search": "Adresse oder Postleitzahl suchen",
+            "direct": "Postleitzahl und Stationsnummer"
+          }
+        },
+        "search": {
+          "title": "Packstationen suchen",
+          "description": "Die Suche wird an DHL gesendet und nicht gespeichert.",
+          "data": {
+            "address": "Adresse oder Postleitzahl"
+          }
+        },
+        "direct": {
+          "title": "Konkrete Packstation",
+          "data": {
+            "postal_code": "Postleitzahl des Standorts",
+            "station_number": "Packstationsnummer"
+          }
+        },
+        "select": {
+          "title": "Stationen auswählen",
+          "data": {
+            "stations": "Packstationen"
+          }
+        },
+        "confirm": {
+          "title": "Standorte prüfen und bestätigen",
+          "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.",
+          "data": {
+            "stations": "Bestätigte Stationen"
+          }
+        },
+        "reconfigure": {
+          "title": "Station bearbeiten",
+          "description": "{station}: Name ändern und denselben Standort erneut prüfen. Eine andere Packstation über „Station hinzufügen“ ergänzen.",
+          "data": {
+            "name": "Anzeigename"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "DHL ist nicht erreichbar. Bitte später erneut versuchen.",
+        "station_not_found": "DHL hat diese konkrete Packstation nicht gefunden.",
+        "invalid_response": "DHL hat unerwartete Daten geliefert. Bitte später erneut versuchen.",
+        "rate_limited": "DHL begrenzt die Abfragen. Bitte vor einem weiteren Versuch warten.",
+        "invalid_address": "Adresse oder Postleitzahl mit höchstens 300 Zeichen eingeben.",
+        "invalid_location": "Fünfstellige Postleitzahl und positive Stationsnummer mit bis zu vier Ziffern eingeben.",
+        "no_stations": "Keine neuen Packstationen gefunden. Adresse präzisieren oder Stationsnummer verwenden.",
+        "no_selection": "Mindestens eine Station auswählen.",
+        "already_configured": "Diese Packstation ist bereits eingerichtet.",
+        "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen."
+      },
+      "abort": {
+        "already_configured": "Diese Packstation ist bereits eingerichtet."
+      },
+      "entry_type": "Packstation",
+      "initiate_flow": {
+        "user": "Station hinzufügen",
+        "reconfigure": "Station bearbeiten"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Globale Aktualisierung",
+        "description": "Gilt für alle Stationen. Das maximale Datenalter muss mindestens dem Abfrageintervall entsprechen.",
+        "data": {
+          "scan_interval_minutes": "Abfrageintervall (Minuten)",
+          "max_age_minutes": "Maximales Quellenalter (Minuten)"
+        }
+      }
+    },
+    "error": {
+      "invalid_options": "Ganze Minuten verwenden: Intervall 5–60, Datenalter 30–1440 und mindestens so groß wie das Intervall."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "free_s": {
+        "name": "Freie Fächer S"
+      },
+      "free_m": {
+        "name": "Freie Fächer M"
+      },
+      "free_l": {
+        "name": "Freie Fächer L"
+      },
+      "free_xl": {
+        "name": "Freie Fächer XL"
+      },
+      "free_total": {
+        "name": "Freie Fächer gesamt"
+      },
+      "source_timestamp": {
+        "name": "DHL-Datenstand"
+      }
+    },
+    "binary_sensor": {
+      "data_problem": {
+        "name": "Datenproblem",
+        "state_attributes": {
+          "reason": {
+            "name": "Grund",
+            "state": {
+              "cannot_connect": "Abruf fehlgeschlagen",
+              "station_not_found": "Station nicht gefunden",
+              "invalid_response": "Ungültige Antwort",
+              "rate_limited": "Abfragen begrenzt",
+              "missing_data": "Keine Daten",
+              "missing_timestamp": "Datenstand fehlt",
+              "future_timestamp": "Datenstand liegt in der Zukunft",
+              "stale_data": "Daten veraltet",
+              "missing_compartments": "Fachzahlen unvollständig"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "DHL ist nicht erreichbar. Bitte später erneut versuchen."
+    },
+    "station_not_found": {
+      "message": "DHL hat diese konkrete Packstation nicht gefunden."
+    },
+    "invalid_response": {
+      "message": "DHL hat unerwartete Daten geliefert. Bitte später erneut versuchen."
+    },
+    "rate_limited": {
+      "message": "DHL begrenzt die Abfragen. Bitte vor einem weiteren Versuch warten."
+    }
+  }
+}

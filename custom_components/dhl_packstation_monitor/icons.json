@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "free_s": {
+        "default": "mdi:package-variant-closed"
+      },
+      "free_m": {
+        "default": "mdi:package-variant-closed"
+      },
+      "free_l": {
+        "default": "mdi:package-variant-closed"
+      },
+      "free_xl": {
+        "default": "mdi:package-variant-closed"
+      },
+      "free_total": {
+        "default": "mdi:package-variant-closed"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "domain": "dhl_packstation_monitor",
+  "name": "DHL Packstation Monitor",
+  "categories": [
+    "productivity_information"
+  ],
+  "codeowners": [
+    "@jonalbr"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/jonalbr/ha-dhl-packstation",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/jonalbr/ha-dhl-packstation/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0b1"
+}

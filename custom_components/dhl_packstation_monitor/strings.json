@@ -1,0 +1,197 @@
+{
+  "title": "DHL Packstation Monitor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Packstations",
+        "description": "Search an address or enter a specific station. No DHL account is required.",
+        "menu_options": {
+          "search": "Search an address or postal code",
+          "direct": "Postal code and station number"
+        }
+      },
+      "search": {
+        "title": "Find Packstations",
+        "description": "The search is sent to DHL and is not saved.",
+        "data": {
+          "address": "Address or postal code"
+        }
+      },
+      "direct": {
+        "title": "Specific Packstation",
+        "data": {
+          "postal_code": "Station postal code",
+          "station_number": "Packstation number"
+        }
+      },
+      "select": {
+        "title": "Select stations",
+        "data": {
+          "stations": "Packstations"
+        }
+      },
+      "confirm": {
+        "title": "Review and confirm locations",
+        "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.",
+        "data": {
+          "stations": "Confirmed stations"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "DHL could not be reached. Try again later.",
+      "station_not_found": "DHL did not return this exact Packstation.",
+      "invalid_response": "DHL returned unexpected data. Try again later.",
+      "rate_limited": "DHL is limiting requests. Wait before trying again.",
+      "invalid_address": "Enter an address or postal code, up to 300 characters.",
+      "invalid_location": "Enter a five-digit postal code and a positive station number with up to four digits.",
+      "no_stations": "No new Packstations were found. Refine the address or use the station number.",
+      "no_selection": "Select at least one station.",
+      "already_configured": "This Packstation is already configured.",
+      "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them."
+    },
+    "abort": {
+      "already_configured": "DHL Packstation Monitor is already configured. Add stations to the existing entry."
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "step": {
+        "user": {
+          "title": "Add Packstations",
+          "description": "Search an address or enter a specific station. No DHL account is required.",
+          "menu_options": {
+            "search": "Search an address or postal code",
+            "direct": "Postal code and station number"
+          }
+        },
+        "search": {
+          "title": "Find Packstations",
+          "description": "The search is sent to DHL and is not saved.",
+          "data": {
+            "address": "Address or postal code"
+          }
+        },
+        "direct": {
+          "title": "Specific Packstation",
+          "data": {
+            "postal_code": "Station postal code",
+            "station_number": "Packstation number"
+          }
+        },
+        "select": {
+          "title": "Select stations",
+          "data": {
+            "stations": "Packstations"
+          }
+        },
+        "confirm": {
+          "title": "Review and confirm locations",
+          "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.",
+          "data": {
+            "stations": "Confirmed stations"
+          }
+        },
+        "reconfigure": {
+          "title": "Edit station",
+          "description": "{station}: change the name and recheck the same location. Use Add station for a different Packstation.",
+          "data": {
+            "name": "Display name"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "DHL could not be reached. Try again later.",
+        "station_not_found": "DHL did not return this exact Packstation.",
+        "invalid_response": "DHL returned unexpected data. Try again later.",
+        "rate_limited": "DHL is limiting requests. Wait before trying again.",
+        "invalid_address": "Enter an address or postal code, up to 300 characters.",
+        "invalid_location": "Enter a five-digit postal code and a positive station number with up to four digits.",
+        "no_stations": "No new Packstations were found. Refine the address or use the station number.",
+        "no_selection": "Select at least one station.",
+        "already_configured": "This Packstation is already configured.",
+        "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them."
+      },
+      "abort": {
+        "already_configured": "This Packstation is already configured."
+      },
+      "entry_type": "Packstation",
+      "initiate_flow": {
+        "user": "Add station",
+        "reconfigure": "Edit station"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Global updates",
+        "description": "Applies to every station. Maximum data age must be at least the polling interval.",
+        "data": {
+          "scan_interval_minutes": "Polling interval (minutes)",
+          "max_age_minutes": "Maximum source age (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_options": "Use whole minutes: interval 5–60, maximum age 30–1440 and at least the interval."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "free_s": {
+        "name": "Free S compartments"
+      },
+      "free_m": {
+        "name": "Free M compartments"
+      },
+      "free_l": {
+        "name": "Free L compartments"
+      },
+      "free_xl": {
+        "name": "Free XL compartments"
+      },
+      "free_total": {
+        "name": "Free compartments total"
+      },
+      "source_timestamp": {
+        "name": "DHL data timestamp"
+      }
+    },
+    "binary_sensor": {
+      "data_problem": {
+        "name": "Data problem",
+        "state_attributes": {
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "cannot_connect": "Request failed",
+              "station_not_found": "Station not found",
+              "invalid_response": "Invalid response",
+              "rate_limited": "Requests limited",
+              "missing_data": "No data",
+              "missing_timestamp": "Timestamp missing",
+              "future_timestamp": "Timestamp in the future",
+              "stale_data": "Data stale",
+              "missing_compartments": "Counts incomplete"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "DHL could not be reached. Try again later."
+    },
+    "station_not_found": {
+      "message": "DHL did not return this exact Packstation."
+    },
+    "invalid_response": {
+      "message": "DHL returned unexpected data. Try again later."
+    },
+    "rate_limited": {
+      "message": "DHL is limiting requests. Wait before trying again."
+    }
+  }
+}

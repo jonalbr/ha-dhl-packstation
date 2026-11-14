@@ -1,0 +1,31 @@
+[project]
+name = "ha-dhl-packstation"
+version = "0.1.0b1"
+description = "DHL Packstation compartment availability for Home Assistant"
+requires-python = ">=3.14.2"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest==9.0.3", "pytest-asyncio==1.4.0", "aiohttp==3.14.5", "ruff==0.17.2"]
+ha-test = [
+  "pytest-homeassistant==2026.11.1; sys_platform == 'linux'",
+  "pytest-cov==7.1.0; sys_platform == 'linux'",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-p no:respx"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+

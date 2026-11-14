@@ -1,0 +1,62 @@
+# Internal Bronze self-assessment; custom integration, no official tier.
+rules:
+  action-setup:
+    status: exempt
+    comment: "No custom actions are provided."
+  appropriate-polling:
+    status: done
+    comment: "Default 15-minute shared polling; options are bounded and HTTP 429 is respected."
+  brands:
+    status: done
+    comment: "Original local icons are provided through the custom-integration brand mechanism."
+  common-modules:
+    status: done
+    comment: "Dedicated API, models, coordinator, entity and constants modules."
+  config-flow:
+    status: done
+    comment: "Native initial, options and station subentry flows; no YAML setup."
+  config-flow-test-coverage:
+    status: done
+    comment: "Real HA 2026.11.1 flow-manager tests enforce 100% statement and branch coverage."
+  dependency-transparency:
+    status: done
+    comment: "No additional runtime packages; aiohttp is supplied by Home Assistant."
+  docs-actions:
+    status: exempt
+    comment: "No custom actions."
+  docs-conditions:
+    status: exempt
+    comment: "No custom conditions."
+  docs-high-level-description:
+    status: done
+    comment: "README describes public DHL compartment counts and limitations."
+  docs-installation-instructions:
+    status: done
+    comment: "README covers Marketplace, manual installation and prerequisites."
+  docs-removal-instructions:
+    status: done
+    comment: "README documents consumers, entry removal, uninstall and restart."
+  docs-triggers:
+    status: exempt
+    comment: "No custom triggers."
+  entity-event-setup:
+    status: done
+    comment: "CoordinatorEntity manages subscriptions; unload cancels source-expiry timers."
+  entity-unique-id:
+    status: done
+    comment: "Entity identity derives from station identifier and entity key."
+  has-entity-name:
+    status: done
+    comment: "All seven entity types use device-context names and translation keys."
+  runtime-data:
+    status: done
+    comment: "Typed MonitorRuntime is stored on ConfigEntry.runtime_data."
+  test-before-configure:
+    status: done
+    comment: "Selected public station identities are fetched and rechecked before saving."
+  test-before-setup:
+    status: done
+    comment: "Every station is refreshed during setup; failures are isolated per coordinator."
+  unique-config-entry:
+    status: done
+    comment: "Single central config entry and unique station subentries."

@@ -1,0 +1,147 @@
+# DHL Packstation Monitor
+
+See the free S, M, L and XL compartments of German DHL Packstations in Home Assistant.
+Find stations by address or postal code, review their locations, and add several at once.
+No DHL account or API key is required.
+
+**Status: development version 0.1.0b1. No release has been published.**
+This is an independent community integration, not an official DHL product.
+
+## Requirements
+
+- Home Assistant **2026.11.1 or later**.
+- HTTPS access to `www.dhl.de`.
+- A Packstation listed by DHL. Some stations provide no live compartment data.
+
+## Installation
+
+[![Open the repository in your Home Assistant Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jonalbr&repository=ha-dhl-packstation&category=integration)
+
+Add `https://github.com/jonalbr/ha-dhl-packstation` as a custom repository with
+category **Integration**, then download **DHL Packstation Monitor**. Until releases
+exist, installation uses the default branch. This repository is not in the general catalog.
+
+For manual installation, copy `custom_components/dhl_packstation_monitor` into your
+Home Assistant configuration's `custom_components` directory. Restart Home Assistant
+after manual installation. Updates and removal of an already loaded integration also
+require a restart.
+
+## Setup
+
+1. Open **Settings > Devices & services > Add integration > DHL Packstation Monitor**.
+2. Search an address or postal code, or enter a station's postal code and number.
+   Use the station number, not your personal DHL Postnummer.
+3. Select the stations and check their addresses in the preview. Counts shown as
+   `—` are unknown or old. A `⚠` means the location could not be verified: retry or
+   deselect it.
+4. Confirm. Each station becomes one device under the central integration entry.
+
+Use **Add station** on that entry to add further stations individually. Existing stations
+are excluded from search results. **Edit station** changes the displayed name and
+rechecks the same DHL identifier; use Add station for a different location. Renaming
+does not change entity identities. Device names explicitly overridden in Home Assistant
+remain under your control.
+
+Removing a station stops its polling and removes its entities. It does not remove other
+stations. The central entry can remain empty so you can add stations again later.
+
+## Entities
+
+Every station has seven entities:
+
+| Entity | Meaning |
+| --- | --- |
+| Free S / M / L / XL compartments | Four exact nonnegative counts reported by DHL |
+| Free compartments total | Sum, available only when all four sizes are known |
+| DHL data timestamp | Last valid source timestamp, including after a failed request |
+| Data problem | Diagnostic for failed, missing, stale or incomplete data |
+
+Zero means no free compartment of that size. `Unavailable` does not mean zero.
+A missing size affects that size and the total; valid sizes remain usable if fresh.
+Counts support Home Assistant history and measurement statistics, not cumulative totals.
+
+The diagnostic's `reason` attribute distinguishes `cannot_connect`, `station_not_found`,
+`invalid_response`, `rate_limited`, `missing_data`, `missing_timestamp`, `future_timestamp`,
+`stale_data` and `missing_compartments`. Device entities also expose the public station
+identifier, number, postal code and address.
+
+## Options and updates
+
+Global options apply to every station:
+
+| Option | Default | Range |
+| --- | --- | --- |
+| Polling interval | 15 minutes | 5–60 whole minutes |
+| Maximum source age | 60 minutes | 30–1440 whole minutes, at least the polling interval |
+
+The source timestamp is DHL's observation time, not the time of our HTTP request.
+Counts expire at their configured age even between requests. Missing timestamps,
+timestamps without a timezone, and timestamps more than five minutes in the future
+make counts unavailable. A valid old timestamp remains visible for troubleshooting.
+
+Requests share a client and run sequentially. HTTP 429 pauses requests for at least
+15 minutes and honors a longer `Retry-After`, in seconds or HTTP-date form. Other
+failures retry on the normal polling schedule. Changing settings reloads the entry once.
+One station's failure does not prevent the others from loading.
+
+## Compact tile
+
+The total sensor exposes `compartment_summary`, for example
+`S 3 · M 0 · L 2 · XL 1`. The diagnostic exposes the same attribute even when counts
+are unavailable: Home Assistant removes extra attributes from unavailable entities.
+Use this diagnostic as the native Tile's entity; no custom frontend is installed.
+Replace the example entity ID with your station's actual data-problem diagnostic:
+
+```yaml
+type: tile
+entity: binary_sensor.replace_with_your_station_data_problem
+name: Packstation 407
+icon: mdi:package-variant-closed
+color: amber
+state_content: compartment_summary
+tap_action:
+  action: more-info
+```
+
+The same example is in `examples/tile.yaml`. Unknown sizes appear as `—`; stale or
+failed data never populate the summary with old counts. Tapping opens the standard
+Home Assistant diagnostic details. Open the individual size or total sensors for history.
+
+For a notification, use the desired size sensor in a Home Assistant automation and
+check that its state is available. Notifications and parcel-size preferences remain
+in your automations; the integration creates no custom actions or triggers.
+
+## Limits and privacy
+
+This uses the **DHL website's undocumented service**. Fields, access restrictions and
+URLs can change. Counts can be delayed and do not reserve a compartment or guarantee
+availability when you arrive. This integration cannot open lockers, track parcels or
+provide utilization forecasts.
+
+Search text is sent to DHL and exists only in the active setup dialog. Saved settings
+contain selected public stations and polling options, not the original search address.
+DHL sees the requesting IP address. No credentials, personal Postnummer, parcel number,
+analytics service or external proxy is used. Downloadable diagnostics omit addresses,
+search text and raw vendor responses. Public station identifiers remain in diagnostics.
+
+If counts are unavailable, inspect the data timestamp and diagnostic reason. For a
+missing station, verify its postal code in DHL's location finder. For request limits,
+wait; repeatedly restarting setup does not improve DHL's availability.
+
+## Removal
+
+Remove affected dashboard cards and automations, then delete the integration entry
+under Devices & services. Uninstall its repository in the Marketplace and restart
+Home Assistant. Manual installations can remove the component folder after deleting
+the entry, then restart. Home Assistant manages previously recorded history separately.
+
+## Development
+
+See [development](DEVELOPMENT.md), [release procedure](RELEASING.md) and the
+[internal quality assessment](docs/quality-scale.md). AI tools assisted with code,
+tests and documentation. The implementation follows current Home Assistant interfaces
+and the development practices used in Tado Overlay Metadata.
+
+MIT licensed. DHL and Packstation are names of their respective owners. Brand images
+show an original generic locker and do not use DHL or Home Assistant logos.
+
