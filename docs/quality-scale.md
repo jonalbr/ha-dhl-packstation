@@ -14,6 +14,12 @@ statement and branch coverage are both 100%. Runtime tests cover devices, subent
 links, stable identities, partial data, independent failures, expiry without requests,
 recovery, one reload per change and complete unload.
 
+The combined 71-test Linux run covers all integration modules with 100% statements
+and branches (490 statements, 118 branches). The framework CI job enforces this
+combined coverage threshold; the portable Windows/Linux jobs remain separate.
+
 Portable and framework checks, HACS validation and hassfest run separately in CI.
 No release is authorized. Automated tests use synthetic data; live checks are separate.
+The [separate live check](live-check.md) records real DHL lookup and a temporary HA
+instance with two devices, 14 entities and native desktop/mobile tile verification.
 

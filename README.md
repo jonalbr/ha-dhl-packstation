@@ -107,6 +107,8 @@ The same example is in `examples/tile.yaml`. Unknown sizes appear as `—`; stal
 failed data never populate the summary with old counts. Tapping opens the standard
 Home Assistant diagnostic details. Open the individual size or total sensors for history.
 
+![Native tile in a temporary HA instance; example counts change over time.](docs/images/tile.png)
+
 For a notification, use the desired size sensor in a Home Assistant automation and
 check that its state is available. Notifications and parcel-size preferences remain
 in your automations; the integration creates no custom actions or triggers.

@@ -11,6 +11,20 @@ ha-test = [
   "pytest-homeassistant==2026.11.1; sys_platform == 'linux'",
   "pytest-cov==7.1.0; sys_platform == 'linux'",
 ]
+smoke = [
+  "home-assistant-frontend==20261028.5; sys_platform == 'linux'",
+  "gazetteer-matcher==1.1.0; sys_platform == 'linux'",
+  "hassil==3.12.1; sys_platform == 'linux'",
+  "home-assistant-intents==2026.10.27; sys_platform == 'linux'",
+  "mutagen==1.48.1; sys_platform == 'linux'",
+  "PyTurboJPEG==1.8.3; sys_platform == 'linux'",
+  "ha-ffmpeg==3.2.2; sys_platform == 'linux'",
+  "av==19.0.0; sys_platform == 'linux'",
+  "numpy==2.3.2; sys_platform == 'linux'",
+  "pymicro-vad==1.0.1; sys_platform == 'linux'",
+  "pyspeex-noise==1.0.2; sys_platform == 'linux'",
+  "playwright==1.65.2; sys_platform == 'linux'",
+]
 
 [tool.uv]
 package = false

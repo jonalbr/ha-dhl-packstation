@@ -6,7 +6,8 @@ The current 0.1.0b1 version is an unreleased development candidate.
 ## Prepare
 
 1. Keep the manifest and project version identical. Update the Unreleased changelog.
-2. Run all development checks, including real HA tests with 100% flow branch coverage.
+2. Run all development checks, including the combined HA suite with 100% statement
+   and branch coverage of the integration.
 3. Confirm the exact commit passes portable and HA tests, Ruff, HACS validation and hassfest.
 4. Run the release checker and builder. Inspect the deterministic ZIP in `dist/`.
    Its root contains `manifest.json`; extract its files into

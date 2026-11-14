@@ -20,7 +20,7 @@ The real Home Assistant suite needs Linux. From this repository in Ubuntu/WSL:
 
 ```console
 UV_PROJECT_ENVIRONMENT=.venv-linux uv sync --locked --group ha-test
-UV_PROJECT_ENVIRONMENT=.venv-linux uv run --locked --group ha-test pytest tests/ha --cov=custom_components.dhl_packstation_monitor.config_flow --cov-branch --cov-report=term-missing --cov-fail-under=100
+UV_PROJECT_ENVIRONMENT=.venv-linux uv run --locked --group ha-test pytest tests --cov=custom_components.dhl_packstation_monitor --cov-branch --cov-report=term-missing --cov-fail-under=100
 ```
 
 The separate Linux environment preserves the Windows `.venv` and survives WSL clearing
@@ -28,6 +28,27 @@ The separate Linux environment preserves the Windows `.venv` and survives WSL cl
 Home Assistant are both pinned to 2026.11.1; do not install the overlapping older
 custom-component test plugin or override dependencies to force compatibility.
 The unrelated respx pytest plugin is disabled so HA can initialize its HTTP aliases.
+
+## Separate live smoke test
+
+The optional `smoke` group installs HA's matching frontend and its standard UI import
+dependencies, plus Playwright. These are development packages, not integration requirements.
+Run on Linux; a Linux-filesystem environment is faster than one on a Windows-mounted drive:
+
+```console
+UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv sync --locked --group ha-test --group smoke
+UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --group ha-test --group smoke playwright install chromium --only-shell
+UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --group ha-test --group smoke python scripts/live_smoke.py
+```
+
+The script starts a fresh HA instance on an unused localhost port with its own generated
+account, confirms that instance's HTTP listener through HA's API, and uses the real DHL
+service. It checks the location flow, seven entities per station, device links, tile
+content at desktop and mobile widths, and the more-info dialog. It stops its server
+even when a check fails. Screenshots, logs and the result live under ignored `.smoke/`;
+temporary authentication data must never be committed. It does not contact the user's HA.
+
+See [the recorded live check](docs/live-check.md). Automated CI has no live DHL dependency.
 
 ## Boundaries
 
