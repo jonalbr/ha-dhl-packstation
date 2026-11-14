@@ -1,7 +1,6 @@
 # Development
 
-Use Python 3.14.2 or later and uv. `.python-version` selects 3.14.9; `uv.lock`
-pins development dependencies. Production uses Home Assistant's existing aiohttp session.
+Use Python 3.14 and uv. Production uses Home Assistant's existing aiohttp session.
 
 ## Checks
 
@@ -21,7 +20,7 @@ The real Home Assistant suite needs Linux. From this repository in Ubuntu/WSL:
 
 ```console
 UV_PROJECT_ENVIRONMENT=.venv-linux uv sync --locked --group ha-test
-UV_PROJECT_ENVIRONMENT=.venv-linux uv run --locked --group ha-test pytest tests --cov=custom_components.dhl_packstation_monitor --cov-branch --cov-report=term-missing --cov-fail-under=100
+UV_PROJECT_ENVIRONMENT=.venv-linux uv run --locked --group ha-test pytest tests --cov=custom_components/dhl_packstation_monitor --cov-branch --cov-report=term-missing --cov-fail-under=100
 ```
 
 The separate Linux environment preserves the Windows `.venv` and survives WSL clearing
@@ -29,6 +28,9 @@ The separate Linux environment preserves the Windows `.venv` and survives WSL cl
 Home Assistant are both pinned to 2026.11.1; do not install the overlapping older
 custom-component test plugin or override dependencies to force compatibility.
 The unrelated respx pytest plugin is disabled so HA can initialize its HTTP aliases.
+Coverage targets the component directory and gates all integration statements and branches.
+Ruff uses its default lint rules and 88-character formatter width; no custom selects
+or ignores are configured. CI pins uv 0.13.8 to support the selected Python version.
 
 ## Separate live smoke test
 

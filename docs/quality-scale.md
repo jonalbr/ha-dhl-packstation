@@ -8,7 +8,8 @@ assets use the supported custom-integration mechanism. Actions, triggers and con
 are exempt because the integration provides none. Setup validates every station without
 making unrelated stations unavailable when a read fails.
 
-Verification on 2026-11-14: 63 portable tests pass on Windows; 43 tests pass against
+Verification on 2026-11-14 with Python 3.14.10: 63 portable tests pass on Windows;
+43 tests pass against
 Home Assistant 2026.11.1 with its matching pytest-homeassistant package. Config-flow
 statement and branch coverage are both 100%. Runtime tests cover devices, subentry
 links, stable identities, partial data, independent failures, expiry without requests,

@@ -1,13 +1,21 @@
 [project]
 name = "ha-dhl-packstation"
-version = "0.1.0b1"
+version = "0.1.0"
 description = "DHL Packstation compartment availability for Home Assistant"
 requires-python = ">=3.14.2"
 dependencies = []
 
 [dependency-groups]
-dev = ["pytest==9.0.3", "pytest-asyncio==1.4.0", "aiohttp==3.14.5", "ruff==0.17.2", "resvg-py==0.5.0"]
+dev = [
+  "pytest==9.0.3",
+  "pytest-asyncio==1.4.0",
+  "aiohttp==3.14.5",
+  "ruff==0.17.5",
+  "resvg-py==0.5.0",
+]
+# Keep portable pytest compatible with the pinned HA test plugin.
 ha-test = [
+  "homeassistant==2026.11.1; sys_platform == 'linux'",
   "pytest-homeassistant==2026.11.1; sys_platform == 'linux'",
   "pytest-cov==7.1.0; sys_platform == 'linux'",
 ]
@@ -34,12 +42,8 @@ testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# Let Home Assistant install its httpx alias before respx is imported.
 addopts = "-p no:respx"
 
 [tool.ruff]
-target-version = "py314"
-line-length = 100
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
-
+# Use Ruff's default lint rules and formatter settings.

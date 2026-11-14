@@ -12,7 +12,11 @@ COMPONENT = ROOT / "custom_components/dhl_packstation_monitor"
 
 def keys(value, prefix=""):
     if isinstance(value, dict):
-        return {path for key, item in value.items() for path in keys(item, f"{prefix}/{key}")}
+        return {
+            path
+            for key, item in value.items()
+            for path in keys(item, f"{prefix}/{key}")
+        }
     return {prefix}
 
 
@@ -31,9 +35,15 @@ def check():
     hacs = json.loads((ROOT / "hacs.json").read_text(encoding="utf-8"))
     assert hacs["homeassistant"] == "2026.11.1"
     assert hacs["country"] == "DE"
-    english = json.loads((COMPONENT / "translations/en.json").read_text(encoding="utf-8"))
-    assert english == json.loads((COMPONENT / "strings.json").read_text(encoding="utf-8"))
-    german = json.loads((COMPONENT / "translations/de.json").read_text(encoding="utf-8"))
+    english = json.loads(
+        (COMPONENT / "translations/en.json").read_text(encoding="utf-8")
+    )
+    assert english == json.loads(
+        (COMPONENT / "strings.json").read_text(encoding="utf-8")
+    )
+    german = json.loads(
+        (COMPONENT / "translations/de.json").read_text(encoding="utf-8")
+    )
     assert keys(english) == keys(german)
     assert (COMPONENT / "brand/icon.svg").is_file()
     for name, size in (("icon.png", 256), ("icon@2x.png", 512)):
@@ -52,7 +62,10 @@ def check():
         "examples/tile-capacities.yaml",
     ):
         assert (ROOT / name).is_file(), name
-    assert version in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert re.search(r"^## Unreleased\b", changelog, re.MULTILINE) or re.search(
+        rf"^## {re.escape(version)}\b", changelog, re.MULTILINE
+    )
     assert (COMPONENT / "quality_scale.yaml").is_file()
     print("Local package checks passed")
 

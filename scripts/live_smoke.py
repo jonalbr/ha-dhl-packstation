@@ -41,7 +41,14 @@ def run():
     session = requests.Session()
     with (config / "server.log").open("w") as log:
         process = subprocess.Popen(
-            [sys.executable, "-m", "homeassistant", "--config", str(config), "--skip-pip"],
+            [
+                sys.executable,
+                "-m",
+                "homeassistant",
+                "--config",
+                str(config),
+                "--skip-pip",
+            ],
             stdout=log,
             stderr=subprocess.STDOUT,
         )
@@ -54,7 +61,9 @@ def run():
                 except requests.RequestException:
                     pass
                 if process.poll() is not None:
-                    raise RuntimeError(f"Temporary HA stopped; inspect {config / 'server.log'}")
+                    raise RuntimeError(
+                        f"Temporary HA stopped; inspect {config / 'server.log'}"
+                    )
                 time.sleep(0.5)
             else:
                 raise RuntimeError("Temporary HA startup timed out")
@@ -94,22 +103,24 @@ def run():
                         data["redirect_uri"] = base + "/?auth_callback=1"
                     call("POST", "/api/onboarding/" + step["step"], json=data)
 
-            result = call("POST", "/api/config/config_entries/flow", json={"handler": DOMAIN})
+            result = call(
+                "POST", "/api/config/config_entries/flow", json={"handler": DOMAIN}
+            )
 
             def configure(data):
                 nonlocal result
                 result = call(
-                    "POST", "/api/config/config_entries/flow/" + result["flow_id"], json=data
+                    "POST",
+                    "/api/config/config_entries/flow/" + result["flow_id"],
+                    json=data,
                 )
                 assert not result.get("errors"), result.get("errors")
 
             configure({"next_step_id": "search"})
             address_field = result["data_schema"][0]
-            assert (
-                address_field["description"]["suggested_value"] == "Home location (Home Assistant)"
-            )
+            assert address_field["description"]["suggested_value"] == "Home"
             assert not address_field["required"]
-            configure({"address": "Home location (Home Assistant)"})
+            configure({"address": "Home"})
             assert result["step_id"] == "select"
             choices = result["data_schema"][0]["selector"]["select"]["options"]
             selected = [option["value"] for option in choices[:2]]
@@ -139,38 +150,46 @@ def run():
             import aiohttp
 
             async def registry():
-                async with aiohttp.ClientSession() as client:
-                    async with client.ws_connect(base + "/api/websocket") as ws:
-                        await ws.receive_json()
-                        await ws.send_json({"type": "auth", "access_token": tokens["access_token"]})
-                        assert (await ws.receive_json())["type"] == "auth_ok"
-                        await ws.send_json({"id": 1, "type": "config/entity_registry/list"})
-                        entities = (await ws.receive_json())["result"]
-                        await ws.send_json({"id": 2, "type": "config/device_registry/list"})
-                        devices = (await ws.receive_json())["result"]
-                        # A new HA HTTP listener needs explicit confirmation. This socket
-                        # belongs only to the disposable localhost instance created above.
-                        await ws.send_json({"id": 3, "type": "http/config/promote"})
-                        assert (await ws.receive_json())["success"]
-                        entry_id = next(
-                            entity["config_entry_id"]
-                            for entity in entities
-                            if entity["platform"] == DOMAIN
-                        )
-                        await ws.send_json(
-                            {
-                                "id": 4,
-                                "type": "config_entries/subentries/list",
-                                "entry_id": entry_id,
-                            }
-                        )
-                        subentries = (await ws.receive_json())["result"]
-                        return entities, devices, entry_id, subentries
+                async with (
+                    aiohttp.ClientSession() as client,
+                    client.ws_connect(base + "/api/websocket") as ws,
+                ):
+                    await ws.receive_json()
+                    await ws.send_json(
+                        {"type": "auth", "access_token": tokens["access_token"]}
+                    )
+                    assert (await ws.receive_json())["type"] == "auth_ok"
+                    await ws.send_json({"id": 1, "type": "config/entity_registry/list"})
+                    entities = (await ws.receive_json())["result"]
+                    await ws.send_json({"id": 2, "type": "config/device_registry/list"})
+                    devices = (await ws.receive_json())["result"]
+                    # A new HA HTTP listener needs explicit confirmation. This socket
+                    # belongs only to the disposable localhost instance created above.
+                    await ws.send_json({"id": 3, "type": "http/config/promote"})
+                    assert (await ws.receive_json())["success"]
+                    entry_id = next(
+                        entity["config_entry_id"]
+                        for entity in entities
+                        if entity["platform"] == DOMAIN
+                    )
+                    await ws.send_json(
+                        {
+                            "id": 4,
+                            "type": "config_entries/subentries/list",
+                            "entry_id": entry_id,
+                        }
+                    )
+                    subentries = (await ws.receive_json())["result"]
+                    return entities, devices, entry_id, subentries
 
             entities, devices, entry_id, subentries = asyncio.run(registry())
-            own_entities = [entity for entity in entities if entity["platform"] == DOMAIN]
+            own_entities = [
+                entity for entity in entities if entity["platform"] == DOMAIN
+            ]
             assert len(own_entities) == 7 * len(selected)
-            assert len({entity["device_id"] for entity in own_entities}) == len(selected)
+            station_device_ids = {entity["device_id"] for entity in own_entities}
+            assert len(station_device_ids) == len(selected)
+            assert station_device_ids <= {device["id"] for device in devices}
             print(
                 f"Live DHL flow created {len(selected)} devices and {len(own_entities)} entities",
                 flush=True,
@@ -189,9 +208,15 @@ def run():
             edited = call(
                 "POST",
                 "/api/config/config_entries/subentries/flow/" + edited["flow_id"],
-                json={"name": subentries[0]["title"], "display_capacities": manual_capacities},
+                json={
+                    "name": subentries[0]["title"],
+                    "display_capacities": manual_capacities,
+                },
             )
-            assert edited["type"] == "abort" and edited["reason"] == "reconfigure_successful"
+            assert (
+                edited["type"] == "abort"
+                and edited["reason"] == "reconfigure_successful"
+            )
             for _ in range(60):
                 diagnostics = [
                     state
@@ -205,8 +230,12 @@ def run():
                 ):
                     break
                 time.sleep(0.5)
-            diagnostics.sort(key=lambda state: state["attributes"]["station_id"] != selected[0])
-            assert diagnostics[0]["attributes"]["display_capacities"] == manual_capacities
+            diagnostics.sort(
+                key=lambda state: state["attributes"]["station_id"] != selected[0]
+            )
+            assert (
+                diagnostics[0]["attributes"]["display_capacities"] == manual_capacities
+            )
             variants = (
                 "compartment_summary",
                 "compartment_total_summary",
@@ -227,7 +256,10 @@ def run():
             ]
             (config / "ui-lovelace.yaml").write_text(
                 json.dumps(
-                    {"title": "Packstations", "views": [{"title": "Packstations", "cards": cards}]}
+                    {
+                        "title": "Packstations",
+                        "views": [{"title": "Packstations", "cards": cards}],
+                    }
                 ),
                 encoding="utf-8",
             )
@@ -255,12 +287,14 @@ def run():
                     raise
                 summary = diagnostics[0]["attributes"]["compartment_summary"]
                 tile.screenshot(path=str(artifacts / "tile-desktop.png"))
-                tile.get_by_text(summary, exact=True).wait_for(state="visible", timeout=10000)
+                tile.get_by_text(summary, exact=True).wait_for(
+                    state="visible", timeout=10000
+                )
                 for index, variant in enumerate(variants):
                     card = page.locator("hui-tile-card").nth(index)
-                    card.get_by_text(diagnostics[0]["attributes"][variant], exact=True).wait_for(
-                        state="visible", timeout=10000
-                    )
+                    card.get_by_text(
+                        diagnostics[0]["attributes"][variant], exact=True
+                    ).wait_for(state="visible", timeout=10000)
                 page.set_viewport_size({"width": 375, "height": 700})
                 tile.screenshot(path=str(artifacts / "tile-mobile.png"))
                 for index, variant in enumerate(variants):
@@ -291,11 +325,13 @@ def run():
                 page.set_viewport_size({"width": 1280, "height": 900})
                 page.goto(base + "/config/integrations/integration/" + DOMAIN)
                 try:
-                    page.locator("ha-button").filter(has_text="Add station").first.click(
-                        timeout=15000
-                    )
-                    page.get_by_text("Search an address or postal code", exact=True).click()
-                    home = page.get_by_text("Home location (Home Assistant)", exact=True)
+                    page.locator("ha-button").filter(
+                        has_text="Add station"
+                    ).first.click(timeout=15000)
+                    page.get_by_text(
+                        "Search an address or postal code", exact=True
+                    ).click()
+                    home = page.get_by_text("Home", exact=True)
                     home.wait_for(state="visible")
                     page.screenshot(path=str(artifacts / "home-location.png"))
                     page.get_by_role("button", name="Clear", exact=True).click()
@@ -304,9 +340,9 @@ def run():
                     page.locator("ha-picker-field").click()
                     page.locator("ha-picker-combo-box input").fill("Hamburg")
                     page.get_by_text("Add custom item", exact=True).click()
-                    page.locator("ha-picker-field").get_by_text("Hamburg", exact=True).wait_for(
-                        state="visible"
-                    )
+                    page.locator("ha-picker-field").get_by_text(
+                        "Hamburg", exact=True
+                    ).wait_for(state="visible")
                     page.screenshot(path=str(artifacts / "home-location-replaced.png"))
                     page.goto(base + "/config/integrations/integration/" + DOMAIN)
                     page.locator("ha-config-sub-entry-row").filter(
@@ -324,9 +360,13 @@ def run():
                     inputs.first.fill("")
                     page.get_by_role("button", name="Submit", exact=True).click()
                     for _ in range(60):
-                        state = call("GET", "/api/states/" + diagnostics[0]["entity_id"])
+                        state = call(
+                            "GET", "/api/states/" + diagnostics[0]["entity_id"]
+                        )
                         if state["attributes"].get("display_capacities") == {
-                            key: value for key, value in manual_capacities.items() if key != "s"
+                            key: value
+                            for key, value in manual_capacities.items()
+                            if key != "s"
                         }:
                             break
                         time.sleep(0.5)
@@ -345,7 +385,9 @@ def run():
                 "stations": selected,
                 "entities": len(own_entities),
                 "devices": len(selected),
-                "summaries": [state["attributes"]["compartment_summary"] for state in diagnostics],
+                "summaries": [
+                    state["attributes"]["compartment_summary"] for state in diagnostics
+                ],
                 "tile_desktop": True,
                 "tile_mobile": True,
                 "tile_variants": list(variants),

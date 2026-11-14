@@ -46,11 +46,15 @@ class StationEntity(CoordinatorEntity[StationCoordinator]):
     def summary_attributes(self):
         observation = self.coordinator.snapshot
         usable = self.coordinator.usable
-        capacities = dict(self.coordinator.subentry.data.get(CONF_DISPLAY_CAPACITIES, {}))
+        capacities = dict(
+            self.coordinator.subentry.data.get(CONF_DISPLAY_CAPACITIES, {})
+        )
         return {
             "compartment_summary": observation.summary(usable),
             "compartment_total_summary": observation.total_summary(usable),
-            "compartment_capacity_summary": observation.capacity_summary(usable, capacities),
+            "compartment_capacity_summary": observation.capacity_summary(
+                usable, capacities
+            ),
             "reported_total_capacity": observation.total_capacity,
             "display_capacities": capacities,
             "display_capacity_issues": observation.capacity_issues(usable, capacities),

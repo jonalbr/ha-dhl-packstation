@@ -48,7 +48,9 @@ class StationSteps:
             entry = None if self._multiple else self._get_entry()
             runtime = getattr(entry, "runtime_data", None)
             self._api = (
-                runtime.client if runtime else PackstationClient(async_get_clientsession(self.hass))
+                runtime.client
+                if runtime
+                else PackstationClient(async_get_clientsession(self.hass))
             )
         return self._api
 
@@ -78,7 +80,9 @@ class StationSteps:
             self.hass, self.hass.config.language, "selector", {DOMAIN}
         )
         # The native custom-value picker renders the selected value verbatim.
-        home_label = translations[f"component.{DOMAIN}.selector.search_location.options.home"]
+        home_label = translations[
+            f"component.{DOMAIN}.selector.search_location.options.home"
+        ]
         if user_input is not None:
             address = user_input.get("address", "").strip()
             if address == home_label:
@@ -159,14 +163,20 @@ class StationSteps:
                 observation = self._observations.get(key)
                 label += " | " + (
                     observation.summary(
-                        observation.fresh(datetime.now(UTC), timedelta(minutes=DEFAULT_MAX_AGE))
+                        observation.fresh(
+                            datetime.now(UTC), timedelta(minutes=DEFAULT_MAX_AGE)
+                        )
                     )
                     if observation
                     else "⚠"
                 )
             options.append({"value": key, "label": label})
         default = (
-            self._selected if self._multiple else self._selected[0] if self._selected else None
+            self._selected
+            if self._multiple
+            else self._selected[0]
+            if self._selected
+            else None
         )
         field = (
             probatio.Required("stations", default=default)
@@ -241,7 +251,10 @@ class StationSteps:
                         title=NAME,
                         data={},
                         subentries=subentries,
-                        options={CONF_INTERVAL: DEFAULT_INTERVAL, CONF_MAX_AGE: DEFAULT_MAX_AGE},
+                        options={
+                            CONF_INTERVAL: DEFAULT_INTERVAL,
+                            CONF_MAX_AGE: DEFAULT_MAX_AGE,
+                        },
                     )
                 sub = subentries[0]
                 return self.async_create_entry(
@@ -288,7 +301,9 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
         errors = {}
         if user_input is not None:
             try:
-                capacities = normalize_capacities(user_input.get(CONF_DISPLAY_CAPACITIES, {}))
+                capacities = normalize_capacities(
+                    user_input.get(CONF_DISPLAY_CAPACITIES, {})
+                )
                 observation = await self._client().station(subentry.unique_id)
             except ValueError:
                 errors["base"] = "invalid_capacities"
@@ -312,13 +327,18 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required("name", default=subentry.title): TextSelector(),
+                        probatio.Required(
+                            "name", default=subentry.title
+                        ): TextSelector(),
                         probatio.Optional(CONF_DISPLAY_CAPACITIES): section(
                             probatio.Schema(
                                 {
                                     probatio.Optional(size): NumberSelector(
                                         NumberSelectorConfig(
-                                            min=0, max=1000, step=1, mode=NumberSelectorMode.BOX
+                                            min=0,
+                                            max=1000,
+                                            step=1,
+                                            mode=NumberSelectorMode.BOX,
                                         )
                                     )
                                     for size in ("s", "m", "l", "xl")
@@ -331,7 +351,9 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
                 user_input
                 if user_input is not None
                 else {
-                    CONF_DISPLAY_CAPACITIES: dict(subentry.data.get(CONF_DISPLAY_CAPACITIES, {})),
+                    CONF_DISPLAY_CAPACITIES: dict(
+                        subentry.data.get(CONF_DISPLAY_CAPACITIES, {})
+                    ),
                 },
             ),
         )
@@ -362,15 +384,17 @@ class MonitorOptionsFlow(OptionsFlow):
             (CONF_INTERVAL, DEFAULT_INTERVAL, 5, 60),
             (CONF_MAX_AGE, DEFAULT_MAX_AGE, 30, 1440),
         ):
-            fields[probatio.Required(key, default=self.config_entry.options.get(key, default))] = (
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=minimum,
-                        max=maximum,
-                        step=1,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="min",
-                    )
+            fields[
+                probatio.Required(
+                    key, default=self.config_entry.options.get(key, default)
+                )
+            ] = NumberSelector(
+                NumberSelectorConfig(
+                    min=minimum,
+                    max=maximum,
+                    step=1,
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement="min",
                 )
             )
         return self.async_show_form(

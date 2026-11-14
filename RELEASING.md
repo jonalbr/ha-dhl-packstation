@@ -1,7 +1,7 @@
 # Release procedure
 
 **Publication is deferred. Do not create a tag or GitHub release for this work.**
-The current 0.1.0b1 version is an unreleased development candidate.
+The current 0.1.0 version is an unreleased development candidate.
 
 ## Prepare
 

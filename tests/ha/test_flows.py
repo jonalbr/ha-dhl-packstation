@@ -23,9 +23,13 @@ from custom_components.dhl_packstation_monitor.models import (
 
 
 async def start(hass, path="search"):
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert result["type"] is FlowResultType.MENU
-    return await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": path})
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": path}
+    )
 
 
 async def test_initial_multi_station(hass, api):
@@ -40,7 +44,9 @@ async def test_initial_multi_station(hass, api):
     )
     assert result["step_id"] == "confirm"
     assert hass.config_entries.async_entries(DOMAIN) == []
-    with patch("custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True):
+    with patch(
+        "custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"stations": selected}
         )
@@ -49,8 +55,13 @@ async def test_initial_multi_station(hass, api):
     entry = result["result"]
     assert len(entry.subentries) == 2
     assert entry.data == {}
-    assert all("Georgenstr. 31, Berlin" not in str(sub.data) for sub in entry.subentries.values())
-    duplicate = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    assert all(
+        "Georgenstr. 31, Berlin" not in str(sub.data)
+        for sub in entry.subentries.values()
+    )
+    duplicate = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert duplicate["reason"] == "single_instance_allowed"
 
 
@@ -64,7 +75,8 @@ async def test_cancel_before_confirmation_leaves_no_entry(hass, api):
 
 
 @pytest.mark.parametrize(
-    "error", [PackstationError(), StationNotFound(), InvalidResponse(), RateLimited(900)]
+    "error",
+    [PackstationError(), StationNotFound(), InvalidResponse(), RateLimited(900)],
 )
 async def test_search_error_recovery(hass, api, error):
     result = await start(hass)
@@ -83,7 +95,9 @@ async def test_search_error_recovery(hass, api, error):
 @pytest.mark.parametrize("address", [" ", "a" * 301])
 async def test_invalid_search(hass, api, address):
     result = await start(hass)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"address": address})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": address}
+    )
     assert result["errors"] == {"base": "invalid_address"}
     api.search.assert_not_called()
 
@@ -99,7 +113,13 @@ async def test_empty_search(hass, api):
 
 @pytest.mark.parametrize(
     "error",
-    [ValueError(), PackstationError(), StationNotFound(), InvalidResponse(), RateLimited(900)],
+    [
+        ValueError(),
+        PackstationError(),
+        StationNotFound(),
+        InvalidResponse(),
+        RateLimited(900),
+    ],
 )
 async def test_direct_errors(hass, api, error):
     api.resolve.side_effect = error
@@ -126,7 +146,9 @@ async def test_preview_failure_retry_and_deselect(hass, api, observations):
         result["flow_id"], {"stations": ["1-10117407", "1-10117408"]}
     )
     assert result["errors"] == {"base": "validation_failed"}
-    with patch("custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True):
+    with patch(
+        "custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"stations": ["1-10117407"]}
         )
@@ -139,12 +161,16 @@ async def test_empty_selection_and_confirmation(hass, api):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"address": "Berlin"}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"stations": []})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": []}
+    )
     assert result["errors"] == {"base": "no_selection"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"stations": ["1-10117407"]}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"stations": []})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": []}
+    )
     assert result["errors"] == {"base": "no_selection"}
 
 
@@ -179,7 +205,9 @@ async def test_subentry_search_add_and_duplicate(hass, api, entry_factory):
     assert result["errors"] == {"base": "already_configured"}
 
 
-async def test_subentry_duplicate_appearing_during_preview(hass, api, entry_factory, observations):
+async def test_subentry_duplicate_appearing_during_preview(
+    hass, api, entry_factory, observations
+):
     entry = entry_factory()
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "station"), context={"source": "user"}
@@ -207,7 +235,9 @@ async def test_subentry_duplicate_appearing_during_preview(hass, api, entry_fact
 
 
 @pytest.mark.parametrize("name", ["Nearby station", " "])
-async def test_reconfigure_same_identity_and_error_recovery(hass, api, entry_factory, name):
+async def test_reconfigure_same_identity_and_error_recovery(
+    hass, api, entry_factory, name
+):
     entry = entry_factory()
     subentry = next(iter(entry.subentries.values()))
     result = await hass.config_entries.subentries.async_init(
@@ -215,7 +245,9 @@ async def test_reconfigure_same_identity_and_error_recovery(hass, api, entry_fac
         context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
     )
     api.station.side_effect = PackstationError()
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"name": name})
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"name": name}
+    )
     assert result["errors"] == {"base": "cannot_connect"}
     api.station.side_effect = None
     from custom_components.dhl_packstation_monitor.models import Observation, Station
@@ -223,7 +255,9 @@ async def test_reconfigure_same_identity_and_error_recovery(hass, api, entry_fac
     api.station.return_value = Observation(
         Station.from_data(dict(subentry.data["station"])), {}, None
     )
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"name": name})
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"name": name}
+    )
     assert result["reason"] == "reconfigure_successful"
     assert subentry.unique_id == "1-10117407"
     assert subentry.title == (name.strip() or "Packstation 407 · 10117 Berlin")
@@ -245,7 +279,7 @@ async def test_options_defaults_validation_and_save(hass, entry_factory):
 
 @pytest.mark.parametrize(
     "language,label",
-    [("en", "Home location (Home Assistant)"), ("de", "Heimstandort (Home Assistant)")],
+    [("en", "Home"), ("de", "Zuhause")],
 )
 async def test_home_location_suggested_clearable_and_only_sent_on_submit(
     hass, api, language, label
@@ -259,7 +293,9 @@ async def test_home_location_suggested_clearable_and_only_sent_on_submit(
     selector = result["data_schema"].schema[field]
     assert selector.config["custom_value"]
     api.search.assert_not_called()
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"address": label})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": label}
+    )
     api.search.assert_awaited_once_with("52.520000,13.390000")
     assert result["step_id"] == "select"
 
@@ -277,13 +313,15 @@ async def test_home_location_suggested_clearable_and_only_sent_on_submit(
         (52, 181),
     ],
 )
-async def test_missing_or_invalid_home_location_is_not_suggested(hass, api, latitude, longitude):
+async def test_missing_or_invalid_home_location_is_not_suggested(
+    hass, api, latitude, longitude
+):
     hass.config.latitude, hass.config.longitude = latitude, longitude
     result = await start(hass)
     field = next(iter(result["data_schema"].schema))
     assert not field.description
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"address": "Home location (Home Assistant)"}
+        result["flow_id"], {"address": "Home"}
     )
     assert result["errors"] == {"base": "invalid_address"}
     api.search.assert_not_called()
@@ -303,7 +341,9 @@ async def test_cleared_home_stays_empty_then_accepts_another_address(hass, api):
     assert result["step_id"] == "select"
 
 
-async def test_optional_capacities_can_be_added_changed_and_cleared(hass, api, entry_factory):
+async def test_optional_capacities_can_be_added_changed_and_cleared(
+    hass, api, entry_factory
+):
     entry = entry_factory()
     subentry = next(iter(entry.subentries.values()))
 
@@ -312,9 +352,13 @@ async def test_optional_capacities_can_be_added_changed_and_cleared(hass, api, e
             (entry.entry_id, "station"),
             context={"source": "reconfigure", "subentry_id": subentry.subentry_id},
         )
-        return await hass.config_entries.subentries.async_configure(result["flow_id"], values)
+        return await hass.config_entries.subentries.async_configure(
+            result["flow_id"], values
+        )
 
-    result = await edit({"name": "Near home", CONF_DISPLAY_CAPACITIES: {"s": 12, "m": 0}})
+    result = await edit(
+        {"name": "Near home", CONF_DISPLAY_CAPACITIES: {"s": 12, "m": 0}}
+    )
     assert result["reason"] == "reconfigure_successful"
     assert subentry.data[CONF_DISPLAY_CAPACITIES] == {"s": 12, "m": 0}
     result = await hass.config_entries.subentries.async_init(
@@ -323,7 +367,9 @@ async def test_optional_capacities_can_be_added_changed_and_cleared(hass, api, e
     )
     # Suggested values do not become schema defaults, so clearing removes them.
     capacity_field = next(
-        key for key in result["data_schema"].schema if key.schema == CONF_DISPLAY_CAPACITIES
+        key
+        for key in result["data_schema"].schema
+        if key.schema == CONF_DISPLAY_CAPACITIES
     )
     section_schema = result["data_schema"].schema[capacity_field]
     assert section_schema.options["collapsed"]
@@ -334,11 +380,15 @@ async def test_optional_capacities_can_be_added_changed_and_cleared(hass, api, e
     }
     assert suggested == {"s": 12, "m": 0}
     assert section_schema({}) == {}
-    await hass.config_entries.subentries.async_configure(result["flow_id"], {"name": "Near home"})
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"name": "Near home"}
+    )
     assert subentry.data[CONF_DISPLAY_CAPACITIES] == {}
 
 
-async def test_fractional_manual_capacity_reports_validation_error(hass, api, entry_factory):
+async def test_fractional_manual_capacity_reports_validation_error(
+    hass, api, entry_factory
+):
     entry = entry_factory()
     subentry = next(iter(entry.subentries.values()))
     result = await hass.config_entries.subentries.async_init(

@@ -26,5 +26,7 @@ def test_package_is_complete_and_deterministic(monkeypatch):
         assert "brand/icon.png" in names
         assert "brand/icon@2x.png" in names
         assert "brand/icon.svg" in names
-        assert all(not name.startswith(("custom_components/", "tests/", ".")) for name in names)
+        assert all(
+            not name.startswith(("custom_components/", "tests/", ".")) for name in names
+        )
         assert not any("__pycache__" in name or name.endswith(".pyc") for name in names)

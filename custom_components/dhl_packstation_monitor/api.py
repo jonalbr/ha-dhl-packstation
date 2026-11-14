@@ -54,7 +54,8 @@ class PackstationClient:
                         raise StationNotFound()
                     if response.status == 429:
                         seconds = retry_seconds(
-                            response.headers.get("Retry-After", "900"), datetime.now(UTC)
+                            response.headers.get("Retry-After", "900"),
+                            datetime.now(UTC),
                         )
                         self._retry_at = monotonic() + seconds
                         raise RateLimited(seconds)
@@ -71,7 +72,9 @@ class PackstationClient:
             return data
 
     async def search(self, address: str) -> list[Station]:
-        return parse_search(await self._get("nearbySearch", address=address, maxResults=100))
+        return parse_search(
+            await self._get("nearbySearch", address=address, maxResults=100)
+        )
 
     async def resolve(self, postal_code: str, number: str) -> Observation:
         postal_code, number = normalize_location(postal_code, number)
@@ -79,7 +82,10 @@ class PackstationClient:
         for station in candidates:
             if station.postal_code == postal_code and station.number == number:
                 result = await self.station(station.primary_key)
-                if result.station.postal_code != postal_code or result.station.number != number:
+                if (
+                    result.station.postal_code != postal_code
+                    or result.station.number != number
+                ):
                     raise StationNotFound()
                 return result
         raise StationNotFound()

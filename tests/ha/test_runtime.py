@@ -10,14 +10,21 @@ from homeassistant.util import dt as dt_util
 from pytest_homeassistant.common import async_fire_time_changed
 
 from custom_components.dhl_packstation_monitor.const import CONF_INTERVAL, CONF_MAX_AGE
-from custom_components.dhl_packstation_monitor.diagnostics import async_get_config_entry_diagnostics
-from custom_components.dhl_packstation_monitor.models import PackstationError, RateLimited
+from custom_components.dhl_packstation_monitor.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from custom_components.dhl_packstation_monitor.models import (
+    PackstationError,
+    RateLimited,
+)
 
 
 def states(hass, entry):
     return {
         item.unique_id: hass.states.get(item.entity_id)
-        for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        for item in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
     }
 
 
@@ -28,7 +35,9 @@ async def test_seven_entities_each_with_stable_registry_links(hass, api, entry_f
     registered = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
     assert len(registered) == 14
     assert {item.config_subentry_id for item in registered} == set(entry.subentries)
-    assert len(dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)) == 2
+    assert (
+        len(dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)) == 2
+    )
     values = states(hass, entry)
     assert values["1-10117407_free_s"].state == "3"
     assert values["1-10117407_free_m"].state == "0"
@@ -47,17 +56,23 @@ async def test_seven_entities_each_with_stable_registry_links(hass, api, entry_f
     assert not list(coordinator.async_contexts())
 
 
-async def test_partial_counts_and_failure_isolation(hass, api, entry_factory, observations):
+async def test_partial_counts_and_failure_isolation(
+    hass, api, entry_factory, observations
+):
     entry = entry_factory(2)
     original = observations["1-10117407"]
-    observations["1-10117407"] = replace(original, counts={**original.counts, "s": None})
+    observations["1-10117407"] = replace(
+        original, counts={**original.counts, "s": None}
+    )
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     values = states(hass, entry)
     assert values["1-10117407_free_s"].state == "unavailable"
     assert values["1-10117407_free_total"].state == "unavailable"
     assert values["1-10117407_free_m"].state == "0"
-    assert values["1-10117407_data_problem"].attributes["reason"] == "missing_compartments"
+    assert (
+        values["1-10117407_data_problem"].attributes["reason"] == "missing_compartments"
+    )
     coordinator = entry.runtime_data.coordinators["station_407"]
     timestamp = values["1-10117407_source_timestamp"].state
     observations["1-10117407"] = PackstationError()
@@ -129,7 +144,9 @@ async def test_options_reload_once_and_preserve_ids(hass, api, entry_factory):
     await hass.async_block_till_done()
     registry_before = {
         item.unique_id: item.entity_id
-        for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        for item in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
     }
     with patch.object(
         hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
@@ -140,10 +157,14 @@ async def test_options_reload_once_and_preserve_ids(hass, api, entry_factory):
         )
         await hass.async_block_till_done()
         assert reload_entry.await_count == 1
-    assert entry.runtime_data.coordinators["station_407"].max_age == timedelta(minutes=90)
+    assert entry.runtime_data.coordinators["station_407"].max_age == timedelta(
+        minutes=90
+    )
     assert {
         item.unique_id: item.entity_id
-        for item in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        for item in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
     } == registry_before
 
 
@@ -171,7 +192,9 @@ async def test_station_remove_and_add_runtime(hass, api, entry_factory):
         result["flow_id"], {"stations": "1-10117407"}
     )
     await hass.async_block_till_done()
-    assert len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 14
+    assert (
+        len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 14
+    )
 
 
 async def test_reconfigure_respects_device_override(hass, api, entry_factory):
@@ -179,7 +202,9 @@ async def test_reconfigure_respects_device_override(hass, api, entry_factory):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     device = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)[0]
-    dr.async_get(hass).async_update_device(device.id, name_by_user="My custom device name")
+    dr.async_get(hass).async_update_device(
+        device.id, name_by_user="My custom device name"
+    )
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "station"),
         context={"source": "reconfigure", "subentry_id": "station_407"},

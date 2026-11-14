@@ -22,5 +22,7 @@ def build(check=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="Verify PNGs match the SVG master")
+    parser.add_argument(
+        "--check", action="store_true", help="Verify PNGs match the SVG master"
+    )
     build(check=parser.parse_args().check)

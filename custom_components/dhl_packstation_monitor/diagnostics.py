@@ -14,7 +14,9 @@ async def async_get_config_entry_diagnostics(hass, entry):
                     if coordinator.last_source_timestamp
                     else None
                 ),
-                "counts": dict(coordinator.snapshot.counts) if coordinator.usable else None,
+                "counts": dict(coordinator.snapshot.counts)
+                if coordinator.usable
+                else None,
             }
             for coordinator in entry.runtime_data.coordinators.values()
         ],

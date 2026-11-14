@@ -12,7 +12,7 @@
       },
       "search": {
         "title": "Find Packstations",
-        "description": "Your HA home location is selected when available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
+        "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
         "data": {
           "address": "Address or postal code"
         }
@@ -68,7 +68,7 @@
         },
         "search": {
           "title": "Find Packstations",
-          "description": "Your HA home location is selected when available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
+          "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
           "data": {
             "address": "Address or postal code"
           }
@@ -248,7 +248,7 @@
   "selector": {
     "search_location": {
       "options": {
-        "home": "Home location (Home Assistant)"
+        "home": "Home"
       }
     }
   }

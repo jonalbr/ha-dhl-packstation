@@ -40,7 +40,9 @@ class RateLimited(PackstationError):
 def normalize_location(postal_code: str, number: str) -> tuple[str, str]:
     """Validate direct lookup input without synthesizing DHL identifiers."""
     postal_code, number = postal_code.strip(), number.strip()
-    if not re.fullmatch(r"[0-9]{5}", postal_code) or not re.fullmatch(r"[0-9]{1,4}", number):
+    if not re.fullmatch(r"[0-9]{5}", postal_code) or not re.fullmatch(
+        r"[0-9]{1,4}", number
+    ):
         raise ValueError("invalid_location")
     if int(number) == 0:
         raise ValueError("invalid_location")
@@ -82,7 +84,11 @@ def parse_capacity(payload: dict) -> int | None:
         value = item.get("content")
         if type(value) is int and value > 0:
             capacities.add(value)
-        elif isinstance(value, str) and re.fullmatch(r"[0-9]{1,6}", value) and int(value) > 0:
+        elif (
+            isinstance(value, str)
+            and re.fullmatch(r"[0-9]{1,6}", value)
+            and int(value) > 0
+        ):
             capacities.add(int(value))
     return capacities.pop() if len(capacities) == 1 else None
 
@@ -172,7 +178,9 @@ def parse_station(payload: object, expected_key: str | None = None) -> Station:
 
 
 def parse_search(payload: object) -> list[Station]:
-    if not isinstance(payload, dict) or not isinstance(payload.get("pfLocations"), list):
+    if not isinstance(payload, dict) or not isinstance(
+        payload.get("pfLocations"), list
+    ):
         raise InvalidResponse()
     stations = {}
     for item in payload["pfLocations"]:

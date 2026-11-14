@@ -12,7 +12,7 @@
       },
       "search": {
         "title": "Packstationen suchen",
-        "description": "Der HA-Heimstandort ist vorausgewählt, sofern vorhanden. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. Heimkoordinaten an DHL gesendet; sie werden nicht gespeichert.",
+        "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
         "data": {
           "address": "Adresse oder Postleitzahl"
         }
@@ -68,7 +68,7 @@
         },
         "search": {
           "title": "Packstationen suchen",
-          "description": "Der HA-Heimstandort ist vorausgewählt, sofern vorhanden. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. Heimkoordinaten an DHL gesendet; sie werden nicht gespeichert.",
+          "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
           "data": {
             "address": "Adresse oder Postleitzahl"
           }
@@ -248,7 +248,7 @@
   "selector": {
     "search_location": {
       "options": {
-        "home": "Heimstandort (Home Assistant)"
+        "home": "Zuhause"
       }
     }
   }

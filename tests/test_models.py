@@ -20,7 +20,8 @@ from custom_components.dhl_packstation_monitor.models import (
 
 
 @pytest.mark.parametrize(
-    "postal,number", [("", "1"), ("1234", "12"), ("abcde", "1"), ("12345", "0"), ("12345", "12345")]
+    "postal,number",
+    [("", "1"), ("1234", "12"), ("abcde", "1"), ("12345", "0"), ("12345", "12345")],
 )
 def test_invalid_location(postal, number):
     with pytest.raises(ValueError):
@@ -86,7 +87,10 @@ def test_unknown_counts_not_zero(payload, count):
     observation = parse_observation(payload, payload["primaryKeyPF"])
     assert observation.counts["s"] is None
     assert observation.counts["m"] == 0
-    assert observation.problem(datetime.now(UTC), timedelta(hours=1)) == "missing_compartments"
+    assert (
+        observation.problem(datetime.now(UTC), timedelta(hours=1))
+        == "missing_compartments"
+    )
     assert observation.summary(True) == "S — · M 0 · L 2 · XL 1"
 
 
@@ -95,7 +99,10 @@ def test_bad_timestamp(payload, timestamp):
     payload["liveStatus"]["sourceTimestamp"] = timestamp
     observation = parse_observation(payload, payload["primaryKeyPF"])
     assert observation.source_timestamp is None
-    assert observation.problem(datetime.now(UTC), timedelta(hours=1)) == "missing_timestamp"
+    assert (
+        observation.problem(datetime.now(UTC), timedelta(hours=1))
+        == "missing_timestamp"
+    )
 
 
 def test_freshness_boundaries(payload):
@@ -103,9 +110,15 @@ def test_freshness_boundaries(payload):
     now = observation.source_timestamp
     assert observation.problem(now, timedelta(hours=1)) is None
     assert observation.fresh(now + timedelta(minutes=59), timedelta(hours=1))
-    assert observation.problem(now + timedelta(hours=1), timedelta(hours=1)) == "stale_data"
+    assert (
+        observation.problem(now + timedelta(hours=1), timedelta(hours=1))
+        == "stale_data"
+    )
     assert observation.fresh(now - timedelta(minutes=5), timedelta(hours=1))
-    assert observation.problem(now - timedelta(minutes=6), timedelta(hours=1)) == "future_timestamp"
+    assert (
+        observation.problem(now - timedelta(minutes=6), timedelta(hours=1))
+        == "future_timestamp"
+    )
     assert observation.summary(False) == "S — · M — · L — · XL —"
 
 
@@ -119,11 +132,16 @@ def test_no_live_data_is_still_station(payload):
 
 
 def test_optional_display_capacities():
-    assert normalize_capacities({"s": 12.0, "m": 0, "xl": None, "other": 99}) == {"s": 12, "m": 0}
+    assert normalize_capacities({"s": 12.0, "m": 0, "xl": None, "other": 99}) == {
+        "s": 12,
+        "m": 0,
+    }
     assert normalize_capacities({}) == {}
 
 
-@pytest.mark.parametrize("value", [True, "12", -1, 1.5, 1001, float("nan"), float("inf")])
+@pytest.mark.parametrize(
+    "value", [True, "12", -1, 1.5, 1001, float("nan"), float("inf")]
+)
 def test_invalid_display_capacities(value):
     with pytest.raises(ValueError):
         normalize_capacities({"s": value})
@@ -142,8 +160,20 @@ def test_invalid_display_capacities(value):
         ([{"type": "capacity", "content": "bad"}], None),
         ([{"type": "capacity", "content": True}], None),
         ([{"type": "capacity", "content": 0}], None),
-        ([{"type": "capacity", "content": "103"}, {"type": "capacity", "content": "103"}], 103),
-        ([{"type": "capacity", "content": "103"}, {"type": "capacity", "content": "104"}], None),
+        (
+            [
+                {"type": "capacity", "content": "103"},
+                {"type": "capacity", "content": "103"},
+            ],
+            103,
+        ),
+        (
+            [
+                {"type": "capacity", "content": "103"},
+                {"type": "capacity", "content": "104"},
+            ],
+            None,
+        ),
     ],
 )
 def test_reported_station_capacity(items, expected):
@@ -158,13 +188,24 @@ def test_three_display_variants_preserve_observations(payload):
         "S 3/4 · M 0/0 · L 2/3 · XL 1/5"
     )
     assert observation.capacity_summary(True, {}) == "S 3/— · M 0/— · L 2/— · XL 1/—"
-    assert observation.capacity_summary(False, {"s": 4}) == "S —/4 · M —/— · L —/— · XL —/—"
-    assert observation.capacity_summary(True, {"s": 1}) == "S 3/— · M 0/— · L 2/— · XL 1/—"
+    assert (
+        observation.capacity_summary(False, {"s": 4})
+        == "S —/4 · M —/— · L —/— · XL —/—"
+    )
+    assert (
+        observation.capacity_summary(True, {"s": 1}) == "S 3/— · M 0/— · L 2/— · XL 1/—"
+    )
     assert observation.capacity_issues(True, {"s": 1}) == ["s"]
     assert observation.problem(datetime.now(UTC), timedelta(hours=1)) is None
     assert observation.counts["s"] == 3
-    assert replace(observation, total_capacity=5).total_summary(True).startswith("Σ 6/—")
-    assert replace(observation, total_capacity=None).total_summary(True).startswith("Σ 6/—")
+    assert (
+        replace(observation, total_capacity=5).total_summary(True).startswith("Σ 6/—")
+    )
+    assert (
+        replace(observation, total_capacity=None)
+        .total_summary(True)
+        .startswith("Σ 6/—")
+    )
     partial = replace(observation, counts={**observation.counts, "s": None})
     assert partial.total_summary(True).startswith("Σ —/12")
     assert partial.capacity_issues(True, {"s": 1}) == []

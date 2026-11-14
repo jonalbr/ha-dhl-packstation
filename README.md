@@ -1,15 +1,19 @@
 # DHL Packstation Monitor
 
+<img src="custom_components/dhl_packstation_monitor/brand/icon.svg" width="96" height="96" alt="DHL Packstation Monitor">
+
+> [!NOTE]
+> **AI-assisted development:** AI tools helped write the code, tests and documentation.
+
 See the free S, M, L and XL compartments of German DHL Packstations in Home Assistant.
 Find stations by address or postal code, review their locations, and add several at once.
 No DHL account or API key is required.
 
-**Status: development version 0.1.0b1. No release has been published.**
 This is an independent community integration, not an official DHL product.
 
 ## Requirements
 
-- Home Assistant **2026.11.1 or later**.
+- Tested with Home Assistant **2026.11.1** (others may work as well).
 - HTTPS access to `www.dhl.de`.
 - A Packstation listed by DHL. Some stations provide no live compartment data.
 
@@ -17,26 +21,28 @@ This is an independent community integration, not an official DHL product.
 
 [![Open the repository in your Home Assistant Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jonalbr&repository=ha-dhl-packstation&category=integration)
 
-Add `https://github.com/jonalbr/ha-dhl-packstation` as a custom repository with
-category **Integration**, then download **DHL Packstation Monitor**. Until releases
-exist, installation uses the default branch. This repository is not in the general catalog.
+<details>
+<summary>HACS (Home Assistant <2026.11)</summary>
 
-For manual installation, copy `custom_components/dhl_packstation_monitor` into your
-Home Assistant configuration's `custom_components` directory. Restart Home Assistant
-after manual installation. Updates and removal of an already loaded integration also
-require a restart.
+1. In HACS, open **Custom repositories**.
+2. Add `https://github.com/jonalbr/ha-dhl-packstation` with category **Integration**.
+3. Download **DHL Packstation Monitor** and restart Home Assistant.
+4. Continue with [setup](#setup).
+
+For updates, update through HACS and restart Home Assistant.
+
+</details>
 
 ## Setup
 
 1. Open **Settings > Devices & services > Add integration > DHL Packstation Monitor**.
 2. Search an address or postal code, or enter a station's postal code and number.
-   Use the station number, not your personal DHL Postnummer.
 3. Select the stations and check their addresses in the preview. Counts shown as
    `—` are unknown or old. A `⚠` means the location could not be verified: retry or
    deselect it.
 4. Confirm. Each station becomes one device under the central integration entry.
 
-Search selects **Home location (Home Assistant)** when valid home coordinates exist.
+Search selects **Home** when valid home coordinates exist.
 Home Assistant stores coordinates, not a street address. Click **X** to clear the
 selection and enter any other address or postal code. No home location is selected
 when coordinates are missing. DHL receives the chosen location only after submission.
@@ -169,7 +175,5 @@ See [development](DEVELOPMENT.md), [release procedure](RELEASING.md) and the
 tests and documentation. The implementation follows current Home Assistant interfaces
 and the development practices used in Tado Overlay Metadata.
 
-MIT licensed. DHL and Packstation are names of their respective owners. Brand images
-show an original geometric locker in red and yellow, without a DHL wordmark. An editable
-SVG master accompanies the PNG exports required by Home Assistant.
-
+## License
+[MIT](LICENSE). This is an independent community integration, not an official DHL product.
