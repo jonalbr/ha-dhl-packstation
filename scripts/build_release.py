@@ -13,13 +13,15 @@ def build():
     ]
     target = ROOT / "dist" / f"dhl_packstation_monitor-{version}.zip"
     target.parent.mkdir(exist_ok=True)
+    files = {
+        path.relative_to(COMPONENT).as_posix(): path
+        for path in COMPONENT.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+    }
+    files["LICENSE"] = ROOT / "LICENSE"
     with ZipFile(target, "w", compression=ZIP_DEFLATED) as archive:
-        for path in sorted(COMPONENT.rglob("*")):
-            if not path.is_file() or "__pycache__" in path.parts:
-                continue
-            info = ZipInfo(
-                path.relative_to(COMPONENT).as_posix(), (2026, 1, 1, 0, 0, 0)
-            )
+        for name, path in sorted(files.items()):
+            info = ZipInfo(name, (2026, 1, 1, 0, 0, 0))
             info.compress_type = ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, path.read_bytes())

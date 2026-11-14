@@ -1,11 +1,12 @@
 # Release procedure
 
-**Publication is deferred. Do not create a tag or GitHub release for this work.**
-The current 0.1.0 version is an unreleased development candidate.
+Prepare and merge a release candidate before publishing its matching version tag.
+Pushing the tag starts the automated GitHub release workflow described below.
 
 ## Prepare
 
-1. Keep the manifest and project version identical. Update the Unreleased changelog.
+1. Keep the manifest, project and integration version identical. Prepare a dated
+   changelog section matching that version.
 2. Run all development checks, including the combined HA suite with 100% statement
    and branch coverage of the integration.
 3. Confirm the exact commit passes portable and HA tests, Ruff, HACS validation and hassfest.
@@ -22,13 +23,17 @@ The local validator checks structure and versions, not upstream catalog eligibil
 1. Complete the candidate's live Home Assistant smoke test. Use a manually
    published prerelease if required live validation is incomplete; the automated
    workflow publishes stable releases only.
-2. After publication is requested, choose the version, set it in the manifest and
-   `pyproject.toml`, run `uv lock`, and move the Unreleased notes into a dated
+2. After publication is requested, choose the version, set it in the manifest,
+   `pyproject.toml` and `const.py`, run `uv lock`, and prepare a dated
    `## <version> - YYYY-MM-DD` changelog section. Commit and push the version,
-   lockfile and notes. Confirm all jobs in the **Validate** workflow succeed.
-3. Create and push an annotated tag matching the manifest and project version:
+   lockfile and notes. Merge the changes to `main` and confirm all jobs in the
+   **Validate** workflow succeed for that commit.
+3. Update a clean local `main` checkout, then create and push an annotated tag
+   matching the manifest and project version:
 
    ```console
+   git switch main
+   git pull --ff-only origin main
    git tag -a v0.1.0 -m "Release 0.1.0"
    git push origin v0.1.0
    ```
