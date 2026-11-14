@@ -21,6 +21,9 @@ This is an independent community integration, not an official DHL product.
 
 [![Open the repository in your Home Assistant Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jonalbr&repository=ha-dhl-packstation&category=integration)
 
+Use the repository button above to open this integration in Home Assistant
+Marketplace, download it, and restart Home Assistant. Continue with [setup](#setup).
+
 <details>
 <summary>HACS (Home Assistant <2026.11)</summary>
 
@@ -32,6 +35,18 @@ This is an independent community integration, not an official DHL product.
 For updates, update through HACS and restart Home Assistant.
 
 </details>
+
+### Manual installation
+
+Download the integration ZIP from [GitHub releases](https://github.com/jonalbr/ha-dhl-packstation/releases).
+Create `<config>/custom_components/dhl_packstation_monitor/` and extract the ZIP's
+files directly into that folder. It must contain `manifest.json`, without an extra
+nested component folder. Alternatively, copy `custom_components/dhl_packstation_monitor`
+from a repository checkout into your Home Assistant configuration's `custom_components`
+directory. Restart Home Assistant, then continue with [setup](#setup).
+
+For manual updates, replace the component files with the new version and restart
+Home Assistant.
 
 ## Setup
 

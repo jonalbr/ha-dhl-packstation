@@ -22,6 +22,7 @@ def test_package_is_complete_and_deterministic(monkeypatch):
     with ZipFile(package) as archive:
         names = archive.namelist()
         assert "manifest.json" in names
+        assert archive.read("LICENSE") == (ROOT / "LICENSE").read_bytes()
         assert "translations/de.json" in names
         assert "brand/icon.png" in names
         assert "brand/icon@2x.png" in names

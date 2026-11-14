@@ -1,9 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-11-15
 
 - Support Home Assistant 2026.9.0 and later, tested at the minimum and 2026.11.1.
-- Publish releases automatically from matching version tags after all checks pass.
 - Find Packstations by address or postal code and review several locations before setup.
 - Manage stations as subentries with individual devices, seven entities and stable identities.
 - Configure shared polling and source-age limits; edit station names without changing identity.
@@ -12,6 +11,6 @@
 - Provide three native Tiles: free counts, total / DHL capacity and per-size manual capacities.
 - Match README Tile previews to the viewer's light or dark theme.
 - Edit optional per-size totals later without changing measurements or availability.
-- Include an editable SVG icon with reproducible PNG exports.
+- Include local integration branding for Home Assistant.
 - Provide German and English translations and sanitized diagnostics.
 
