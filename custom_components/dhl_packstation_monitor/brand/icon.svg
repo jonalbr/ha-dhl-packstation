@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Packstation Monitor</title>
+  <desc id="description">A geometric red parcel locker on a yellow background.</desc>
+  <rect id="background" width="512" height="512" rx="56" fill="#ffcc00"/>
+  <g id="locker" fill="#d40511">
+    <rect id="roof" x="48" y="116" width="416" height="34" rx="17"/>
+    <g id="left-compartments">
+      <path d="M66 166h154v62H66zM66 240h71v54H66zM149 240h71v54h-71zM66 306h71v32H66zM149 306h71v32h-71zM66 350h71v32H66zM149 350h71v32h-71z"/>
+    </g>
+    <g id="terminal">
+      <path d="M232 166h48v216h-48z"/>
+      <rect x="242" y="180" width="28" height="52" rx="2" fill="#ffcc00"/>
+    </g>
+    <g id="right-compartments">
+      <path d="M292 166h154v62H292zM292 240h71v54h-71zM375 240h71v54h-71zM292 306h71v32h-71zM375 306h71v32h-71zM292 350h71v32h-71zM375 350h71v32h-71z"/>
+    </g>
+  </g>
+</svg>

@@ -12,7 +12,7 @@
       },
       "search": {
         "title": "Packstationen suchen",
-        "description": "Die Suche wird an DHL gesendet und nicht gespeichert.",
+        "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
         "data": {
           "address": "Adresse oder Postleitzahl"
         }
@@ -32,7 +32,7 @@
       },
       "confirm": {
         "title": "Standorte prüfen und bestätigen",
-        "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.",
+        "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen. Optionale Gesamtzahlen je Fachgröße lassen sich später unter Station bearbeiten ergänzen.",
         "data": {
           "stations": "Bestätigte Stationen"
         }
@@ -48,7 +48,8 @@
       "no_stations": "Keine neuen Packstationen gefunden. Adresse präzisieren oder Stationsnummer verwenden.",
       "no_selection": "Mindestens eine Station auswählen.",
       "already_configured": "Diese Packstation ist bereits eingerichtet.",
-      "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen."
+      "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen.",
+      "invalid_capacities": "Gesamtzahlen müssen ganze Zahlen zwischen 0 und 1000 sein. Unbekannte Werte leer lassen."
     },
     "abort": {
       "already_configured": "DHL Packstation Monitor ist bereits eingerichtet. Weitere Stationen im vorhandenen Eintrag hinzufügen."
@@ -67,7 +68,7 @@
         },
         "search": {
           "title": "Packstationen suchen",
-          "description": "Die Suche wird an DHL gesendet und nicht gespeichert.",
+          "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
           "data": {
             "address": "Adresse oder Postleitzahl"
           }
@@ -87,16 +88,27 @@
         },
         "confirm": {
           "title": "Standorte prüfen und bestätigen",
-          "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.",
+          "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen. Optionale Gesamtzahlen je Fachgröße lassen sich später unter Station bearbeiten ergänzen.",
           "data": {
             "stations": "Bestätigte Stationen"
           }
         },
         "reconfigure": {
           "title": "Station bearbeiten",
-          "description": "{station}: Name ändern und denselben Standort erneut prüfen. Eine andere Packstation über „Station hinzufügen“ ergänzen.",
+          "description": "{station}: Name ändern und denselben Standort erneut prüfen. Eine andere Packstation über Station hinzufügen ergänzen. Optional kannst du die Gesamtzahl der Fächer je Größe vor Ort oder anhand eines Fotos abzählen und unten eintragen oder später ergänzen. Diese manuellen Werte dienen nur der Anzeige; sie ändern weder DHL-Sensorwerte noch die Verfügbarkeitsprüfung. Leere Felder bedeuten unbekannt und entfernen bisherige Angaben.",
           "data": {
             "name": "Anzeigename"
+          },
+          "sections": {
+            "display_capacities": {
+              "name": "Fächer insgesamt (optional, nur Anzeige)",
+              "data": {
+                "s": "Gesamtzahl S",
+                "m": "Gesamtzahl M",
+                "l": "Gesamtzahl L",
+                "xl": "Gesamtzahl XL"
+              }
+            }
           }
         }
       },
@@ -110,7 +122,8 @@
         "no_stations": "Keine neuen Packstationen gefunden. Adresse präzisieren oder Stationsnummer verwenden.",
         "no_selection": "Mindestens eine Station auswählen.",
         "already_configured": "Diese Packstation ist bereits eingerichtet.",
-        "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen."
+        "validation_failed": "Einige Stationen konnten nicht geprüft werden (⚠). Erneut versuchen oder abwählen.",
+        "invalid_capacities": "Gesamtzahlen müssen ganze Zahlen zwischen 0 und 1000 sein. Unbekannte Werte leer lassen."
       },
       "abort": {
         "already_configured": "Diese Packstation ist bereits eingerichtet."
@@ -152,7 +165,27 @@
         "name": "Freie Fächer XL"
       },
       "free_total": {
-        "name": "Freie Fächer gesamt"
+        "name": "Freie Fächer gesamt",
+        "state_attributes": {
+          "compartment_summary": {
+            "name": "Freie Fächer"
+          },
+          "compartment_total_summary": {
+            "name": "Freie Fächer mit Stationskapazität"
+          },
+          "compartment_capacity_summary": {
+            "name": "Frei / manuelle Kapazität"
+          },
+          "reported_total_capacity": {
+            "name": "Stationskapazität laut DHL"
+          },
+          "display_capacities": {
+            "name": "Manuelle Gesamtzahlen (nur Anzeige)"
+          },
+          "display_capacity_issues": {
+            "name": "Manuelle Gesamtzahlen unter freier Fachzahl"
+          }
+        }
       },
       "source_timestamp": {
         "name": "DHL-Datenstand"
@@ -175,6 +208,24 @@
               "stale_data": "Daten veraltet",
               "missing_compartments": "Fachzahlen unvollständig"
             }
+          },
+          "compartment_summary": {
+            "name": "Freie Fächer"
+          },
+          "compartment_total_summary": {
+            "name": "Freie Fächer mit Stationskapazität"
+          },
+          "compartment_capacity_summary": {
+            "name": "Frei / manuelle Kapazität"
+          },
+          "reported_total_capacity": {
+            "name": "Stationskapazität laut DHL"
+          },
+          "display_capacities": {
+            "name": "Manuelle Gesamtzahlen (nur Anzeige)"
+          },
+          "display_capacity_issues": {
+            "name": "Manuelle Gesamtzahlen unter freier Fachzahl"
           }
         }
       }
@@ -192,6 +243,13 @@
     },
     "rate_limited": {
       "message": "DHL begrenzt die Abfragen. Bitte vor einem weiteren Versuch warten."
+    }
+  },
+  "selector": {
+    "search_location": {
+      "options": {
+        "home": "Zuhause"
+      }
     }
   }
 }

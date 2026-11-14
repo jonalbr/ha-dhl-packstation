@@ -1,6 +1,9 @@
 """Report unusable or incomplete station data."""
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import StationEntity
@@ -10,7 +13,9 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(hass, entry, async_add_entities):
     for subentry_id, coordinator in entry.runtime_data.coordinators.items():
-        async_add_entities([DataProblemSensor(coordinator)], config_subentry_id=subentry_id)
+        async_add_entities(
+            [DataProblemSensor(coordinator)], config_subentry_id=subentry_id
+        )
 
 
 class DataProblemSensor(StationEntity, BinarySensorEntity):
@@ -33,5 +38,5 @@ class DataProblemSensor(StationEntity, BinarySensorEntity):
         return {
             **super().extra_state_attributes,
             "reason": self.coordinator.problem,
-            "compartment_summary": self.coordinator.snapshot.summary(self.coordinator.usable),
+            **self.summary_attributes(),
         }

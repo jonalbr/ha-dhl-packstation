@@ -7,7 +7,10 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import ClientConnectionError
 
-from custom_components.dhl_packstation_monitor.api import PackstationClient, retry_seconds
+from custom_components.dhl_packstation_monitor.api import (
+    PackstationClient,
+    retry_seconds,
+)
 from custom_components.dhl_packstation_monitor.models import (
     InvalidResponse,
     PackstationError,
@@ -55,7 +58,9 @@ async def test_http_errors(status, error):
     assert client.session.get.call_args.kwargs["allow_redirects"] is False
 
 
-@pytest.mark.parametrize("error", [TimeoutError(), ClientConnectionError("private request URL")])
+@pytest.mark.parametrize(
+    "error", [TimeoutError(), ClientConnectionError("private request URL")]
+)
 async def test_network_errors_are_sanitized(error):
     client = client_for(None)
     client.session.get.side_effect = error
@@ -90,7 +95,10 @@ def test_retry_after_date_and_fallback():
 
 async def test_resolve_exact_station(payload):
     client = client_for(None)
-    client.session.get.side_effect = [Response({"pfLocations": [payload]}), Response(payload)]
+    client.session.get.side_effect = [
+        Response({"pfLocations": [payload]}),
+        Response(payload),
+    ]
     assert (await client.resolve("10117", "407")).counts["s"] == 3
 
 

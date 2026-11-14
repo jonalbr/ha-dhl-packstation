@@ -8,7 +8,14 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_INTERVAL, CONF_MAX_AGE, DEFAULT_INTERVAL, DEFAULT_MAX_AGE, DOMAIN, SIZES
+from .const import (
+    CONF_INTERVAL,
+    CONF_MAX_AGE,
+    DEFAULT_INTERVAL,
+    DEFAULT_MAX_AGE,
+    DOMAIN,
+    SIZES,
+)
 from .models import Observation, PackstationError, RateLimited, Station
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,13 +28,19 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
             _LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}_{subentry.unique_id}",
-            update_interval=timedelta(minutes=entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL)),
+            update_interval=timedelta(
+                minutes=entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+            ),
         )
         self.client = client
         self.subentry = subentry
-        self.max_age = timedelta(minutes=entry.options.get(CONF_MAX_AGE, DEFAULT_MAX_AGE))
+        self.max_age = timedelta(
+            minutes=entry.options.get(CONF_MAX_AGE, DEFAULT_MAX_AGE)
+        )
         self.snapshot = Observation(
-            Station.from_data(dict(subentry.data["station"])), dict.fromkeys(SIZES), None
+            Station.from_data(dict(subentry.data["station"])),
+            dict.fromkeys(SIZES),
+            None,
         )
         self.last_source_timestamp = None
         self._cancel_expiry = None
@@ -35,7 +48,9 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
 
     @property
     def usable(self):
-        return self.last_update_success and self.snapshot.fresh(dt_util.utcnow(), self.max_age)
+        return self.last_update_success and self.snapshot.fresh(
+            dt_util.utcnow(), self.max_age
+        )
 
     @property
     def problem(self):
@@ -60,15 +75,21 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
         except RateLimited as err:
             self.failure_reason = err.code
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key=err.code, retry_after=err.retry_after
+                translation_domain=DOMAIN,
+                translation_key=err.code,
+                retry_after=err.retry_after,
             ) from err
         except PackstationError as err:
             self.failure_reason = err.code
-            raise UpdateFailed(translation_domain=DOMAIN, translation_key=err.code) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key=err.code
+            ) from err
         self.cancel_expiry()
         self.snapshot = observation
         timestamp = observation.source_timestamp
-        if timestamp is not None and timestamp <= dt_util.utcnow() + timedelta(minutes=5):
+        if timestamp is not None and timestamp <= dt_util.utcnow() + timedelta(
+            minutes=5
+        ):
             self.last_source_timestamp = timestamp
         if observation.fresh(dt_util.utcnow(), self.max_age):
             self._cancel_expiry = async_track_point_in_utc_time(

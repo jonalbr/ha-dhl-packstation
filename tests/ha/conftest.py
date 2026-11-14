@@ -7,7 +7,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.dhl_packstation_monitor.api import PackstationClient
-from custom_components.dhl_packstation_monitor.const import CONF_INTERVAL, CONF_MAX_AGE, DOMAIN
+from custom_components.dhl_packstation_monitor.const import (
+    CONF_INTERVAL,
+    CONF_MAX_AGE,
+    DOMAIN,
+)
 from custom_components.dhl_packstation_monitor.models import (
     StationNotFound,
     normalize_location,
@@ -18,7 +22,9 @@ from custom_components.dhl_packstation_monitor.models import (
 @pytest.fixture
 def observations(payload):
     second = deepcopy(payload)
-    second.update(primaryKeyPF="1-10117408", primaryKeyZipRegion="408", street="Other street")
+    second.update(
+        primaryKeyPF="1-10117408", primaryKeyZipRegion="408", street="Other street"
+    )
     return {
         item["primaryKeyPF"]: parse_observation(item, item["primaryKeyPF"])
         for item in (payload, second)
@@ -52,7 +58,10 @@ def api(observations):
             "custom_components.dhl_packstation_monitor.config_flow.PackstationClient",
             return_value=client,
         ),
-        patch("custom_components.dhl_packstation_monitor.PackstationClient", return_value=client),
+        patch(
+            "custom_components.dhl_packstation_monitor.PackstationClient",
+            return_value=client,
+        ),
     ):
         yield client
 

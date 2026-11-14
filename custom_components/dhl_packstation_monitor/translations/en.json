@@ -12,7 +12,7 @@
       },
       "search": {
         "title": "Find Packstations",
-        "description": "The search is sent to DHL and is not saved.",
+        "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
         "data": {
           "address": "Address or postal code"
         }
@@ -32,7 +32,7 @@
       },
       "confirm": {
         "title": "Review and confirm locations",
-        "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.",
+        "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations. Optional compartment totals per size can be added later under Edit station.",
         "data": {
           "stations": "Confirmed stations"
         }
@@ -48,7 +48,8 @@
       "no_stations": "No new Packstations were found. Refine the address or use the station number.",
       "no_selection": "Select at least one station.",
       "already_configured": "This Packstation is already configured.",
-      "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them."
+      "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them.",
+      "invalid_capacities": "Totals must be whole numbers between 0 and 1000. Leave unknown values empty."
     },
     "abort": {
       "already_configured": "DHL Packstation Monitor is already configured. Add stations to the existing entry."
@@ -67,7 +68,7 @@
         },
         "search": {
           "title": "Find Packstations",
-          "description": "The search is sent to DHL and is not saved.",
+          "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
           "data": {
             "address": "Address or postal code"
           }
@@ -87,16 +88,27 @@
         },
         "confirm": {
           "title": "Review and confirm locations",
-          "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.",
+          "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations. Optional compartment totals per size can be added later under Edit station.",
           "data": {
             "stations": "Confirmed stations"
           }
         },
         "reconfigure": {
           "title": "Edit station",
-          "description": "{station}: change the name and recheck the same location. Use Add station for a different Packstation.",
+          "description": "{station}: change the name and recheck the same location. Use Add station for a different Packstation. Optionally count the compartments per size on site or from a photo and enter or add them below later. These manual totals affect only the display, never DHL sensor values or availability checks. Empty fields mean unknown and remove previous values.",
           "data": {
             "name": "Display name"
+          },
+          "sections": {
+            "display_capacities": {
+              "name": "Compartment totals (optional, display only)",
+              "data": {
+                "s": "Total S",
+                "m": "Total M",
+                "l": "Total L",
+                "xl": "Total XL"
+              }
+            }
           }
         }
       },
@@ -110,7 +122,8 @@
         "no_stations": "No new Packstations were found. Refine the address or use the station number.",
         "no_selection": "Select at least one station.",
         "already_configured": "This Packstation is already configured.",
-        "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them."
+        "validation_failed": "Some stations could not be checked (⚠). Retry or deselect them.",
+        "invalid_capacities": "Totals must be whole numbers between 0 and 1000. Leave unknown values empty."
       },
       "abort": {
         "already_configured": "This Packstation is already configured."
@@ -152,7 +165,27 @@
         "name": "Free XL compartments"
       },
       "free_total": {
-        "name": "Free compartments total"
+        "name": "Free compartments total",
+        "state_attributes": {
+          "compartment_summary": {
+            "name": "Free compartments"
+          },
+          "compartment_total_summary": {
+            "name": "Free compartments and station capacity"
+          },
+          "compartment_capacity_summary": {
+            "name": "Free / manual capacity"
+          },
+          "reported_total_capacity": {
+            "name": "DHL-reported station capacity"
+          },
+          "display_capacities": {
+            "name": "Manual totals (display only)"
+          },
+          "display_capacity_issues": {
+            "name": "Manual totals below free counts"
+          }
+        }
       },
       "source_timestamp": {
         "name": "DHL data timestamp"
@@ -175,6 +208,24 @@
               "stale_data": "Data stale",
               "missing_compartments": "Counts incomplete"
             }
+          },
+          "compartment_summary": {
+            "name": "Free compartments"
+          },
+          "compartment_total_summary": {
+            "name": "Free compartments and station capacity"
+          },
+          "compartment_capacity_summary": {
+            "name": "Free / manual capacity"
+          },
+          "reported_total_capacity": {
+            "name": "DHL-reported station capacity"
+          },
+          "display_capacities": {
+            "name": "Manual totals (display only)"
+          },
+          "display_capacity_issues": {
+            "name": "Manual totals below free counts"
           }
         }
       }
@@ -192,6 +243,13 @@
     },
     "rate_limited": {
       "message": "DHL is limiting requests. Wait before trying again."
+    }
+  },
+  "selector": {
+    "search_location": {
+      "options": {
+        "home": "Home"
+      }
     }
   }
 }

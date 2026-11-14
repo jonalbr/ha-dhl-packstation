@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_DISPLAY_CAPACITIES, DOMAIN
 from .coordinator import StationCoordinator
 
 
@@ -41,4 +41,21 @@ class StationEntity(CoordinatorEntity[StationCoordinator]):
             "station_number": station.number,
             "postal_code": station.postal_code,
             "address": station.address,
+        }
+
+    def summary_attributes(self):
+        observation = self.coordinator.snapshot
+        usable = self.coordinator.usable
+        capacities = dict(
+            self.coordinator.subentry.data.get(CONF_DISPLAY_CAPACITIES, {})
+        )
+        return {
+            "compartment_summary": observation.summary(usable),
+            "compartment_total_summary": observation.total_summary(usable),
+            "compartment_capacity_summary": observation.capacity_summary(
+                usable, capacities
+            ),
+            "reported_total_capacity": observation.total_capacity,
+            "display_capacities": capacities,
+            "display_capacity_issues": observation.capacity_issues(usable, capacities),
         }

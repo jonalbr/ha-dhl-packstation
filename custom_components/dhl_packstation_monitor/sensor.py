@@ -1,6 +1,10 @@
 """Five compartment counts and the source timestamp."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import SIZES
@@ -31,7 +35,11 @@ class CompartmentSensor(StationEntity, SensorEntity):
     def native_value(self):
         counts = self.coordinator.snapshot.counts
         if self.size == "total":
-            return sum(counts.values()) if all(v is not None for v in counts.values()) else None
+            return (
+                sum(counts.values())
+                if all(v is not None for v in counts.values())
+                else None
+            )
         return counts[self.size]
 
     @property
@@ -42,9 +50,7 @@ class CompartmentSensor(StationEntity, SensorEntity):
     def extra_state_attributes(self):
         attributes = super().extra_state_attributes
         if self.size == "total":
-            attributes["compartment_summary"] = self.coordinator.snapshot.summary(
-                self.coordinator.usable
-            )
+            attributes.update(self.summary_attributes())
         return attributes
 
 

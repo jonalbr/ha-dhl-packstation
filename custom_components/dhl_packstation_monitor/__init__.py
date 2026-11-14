@@ -18,7 +18,9 @@ class MonitorRuntime:
     coordinators: dict[str, StationCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]
+) -> bool:
     """Set up each station independently, including temporarily unavailable ones."""
     from homeassistant.const import Platform
     from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -39,11 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry[MonitorRunti
     return True
 
 
-async def _async_reload(hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]) -> None:
+async def _async_reload(
+    hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]
+) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]
+) -> bool:
     from homeassistant.const import Platform
 
     return await hass.config_entries.async_unload_platforms(
