@@ -266,7 +266,9 @@ def run():
             )
             with sync_playwright() as browser_api:
                 browser = browser_api.chromium.launch()
-                page = browser.new_page(viewport={"width": 1280, "height": 800})
+                page = browser.new_page(
+                    viewport={"width": 1280, "height": 800}, color_scheme="light"
+                )
                 browser_tokens = {
                     **tokens,
                     "hassUrl": base,
@@ -286,34 +288,54 @@ def run():
                     page.screenshot(path=str(artifacts / "browser-failure.png"))
                     print(page.locator("body").inner_text()[:2000], flush=True)
                     raise
-                summary = diagnostics[0]["attributes"]["compartment_summary"]
-                tile.screenshot(path=str(artifacts / "tile-desktop.png"))
-                tile.get_by_text(summary, exact=True).wait_for(
-                    state="visible", timeout=10000
-                )
-                for index, variant in enumerate(variants):
-                    card = page.locator("hui-tile-card").nth(index)
-                    card.get_by_text(
-                        diagnostics[0]["attributes"][variant], exact=True
-                    ).wait_for(state="visible", timeout=10000)
-                page.set_viewport_size({"width": 375, "height": 700})
-                tile.screenshot(path=str(artifacts / "tile-mobile.png"))
-                for index, variant in enumerate(variants):
-                    page.locator("hui-tile-card").nth(index).screenshot(
-                        path=str(artifacts / f"{variant}-mobile.png")
+                tile_backgrounds = {}
+                for scheme in ("light", "dark"):
+                    page.emulate_media(color_scheme=scheme)
+                    page.wait_for_function(
+                        "(dark) => document.querySelector('home-assistant')"
+                        "?.hass?.themes.darkMode === dark",
+                        arg=scheme == "dark",
                     )
-                assert tile.bounding_box()["width"] <= 375
-                first_box = tile.bounding_box()
-                last_box = page.locator("hui-tile-card").last.bounding_box()
-                page.screenshot(
-                    path=str(artifacts / "tiles-mobile.png"),
-                    clip={
-                        "x": first_box["x"],
-                        "y": first_box["y"],
-                        "width": first_box["width"],
-                        "height": last_box["y"] + last_box["height"] - first_box["y"],
-                    },
-                )
+                    suffix = "-dark" if scheme == "dark" else ""
+                    page.set_viewport_size({"width": 1280, "height": 800})
+                    for index, variant in enumerate(variants):
+                        card = page.locator("hui-tile-card").nth(index)
+                        card.get_by_text(
+                            diagnostics[0]["attributes"][variant], exact=True
+                        ).wait_for(state="visible", timeout=10000)
+                    tile.screenshot(
+                        path=str(artifacts / f"tile-desktop{suffix}.png"),
+                        animations="disabled",
+                    )
+                    tile_backgrounds[scheme] = tile.locator("ha-card").evaluate(
+                        "el => getComputedStyle(el).backgroundColor"
+                    )
+                    page.set_viewport_size({"width": 375, "height": 700})
+                    tile.screenshot(
+                        path=str(artifacts / f"tile-mobile{suffix}.png"),
+                        animations="disabled",
+                    )
+                    for index, variant in enumerate(variants):
+                        page.locator("hui-tile-card").nth(index).screenshot(
+                            path=str(artifacts / f"{variant}-mobile{suffix}.png"),
+                            animations="disabled",
+                        )
+                    first_box = tile.bounding_box()
+                    last_box = page.locator("hui-tile-card").last.bounding_box()
+                    assert first_box["width"] <= 375
+                    page.screenshot(
+                        path=str(artifacts / f"tiles-mobile{suffix}.png"),
+                        animations="disabled",
+                        clip={
+                            "x": first_box["x"],
+                            "y": first_box["y"],
+                            "width": first_box["width"],
+                            "height": last_box["y"]
+                            + last_box["height"]
+                            - first_box["y"],
+                        },
+                    )
+                assert tile_backgrounds["light"] != tile_backgrounds["dark"]
                 try:
                     tile.click(timeout=10000)
                     page.locator("ha-more-info-dialog").get_by_text(
@@ -392,6 +414,7 @@ def run():
                 "tile_desktop": True,
                 "tile_mobile": True,
                 "tile_variants": list(variants),
+                "tile_color_schemes": tile_backgrounds,
                 "more_info": True,
                 "home_location_clear": True,
                 "home_location_replace": True,

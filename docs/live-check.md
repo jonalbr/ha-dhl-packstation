@@ -22,5 +22,10 @@ The first station reported capacity 103 and 59 free compartments. The third tile
 illustrative manual totals 40/30/20/15, not measured capacities. The README preview
 shows all three native mobile tiles before clearing the illustrative S total.
 
+On 2026-11-15, all three variants were captured in native HA light and dark themes
+from the same live data. HA followed the browser color preference; card backgrounds
+were white and RGB 28/28/28 respectively. The README's `<picture>` selected the
+matching screenshot in both browser modes. Manual totals remain illustrative.
+
 Reproduce with the commands in the development guide. No tag, release, catalog
 submission or production installation was made.
