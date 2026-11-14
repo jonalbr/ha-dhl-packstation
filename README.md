@@ -137,7 +137,13 @@ The `display_capacity_issues` attribute identifies inconsistent manual entries w
 raising a data problem. Manual capacities describe the physical locker and remain
 visible when live counts expire. Give long summaries enough dashboard width.
 
-![Three native tiles in a temporary HA instance; manual capacities are illustrative.](docs/images/tiles.png)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/tiles-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/tiles.png">
+    <img alt="Three native tiles in a temporary HA instance; manual capacities are illustrative." src="docs/images/tiles.png">
+  </picture>
+</p>
 
 For a notification, use the desired size sensor in a Home Assistant automation and
 check that its state is available. Notifications and parcel-size preferences remain

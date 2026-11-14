@@ -47,11 +47,18 @@ UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --
 The script starts a fresh HA instance on an unused localhost port with its own generated
 account, confirms that instance's HTTP listener through HA's API, and uses the real DHL
 service. It checks the location flow, seven entities per station, device links, tile
-content for all three variants at desktop and mobile widths, optional capacity editing,
-home-location clearing, and the more-info dialog. Manual capacities in its screenshots
+content for all three variants at desktop and mobile widths in native light and dark
+themes, optional capacity editing, home-location clearing, and the more-info dialog.
+Manual capacities in its screenshots
 are illustrative, not measured locker totals. It stops its server
 even when a check fails. Screenshots, logs and the result live under ignored `.smoke/`;
 temporary authentication data must never be committed. It does not contact the user's HA.
+
+Use `tiles-mobile.png` and `tiles-mobile-dark.png` from the same run for the README's
+`docs/images/tiles.png` and `docs/images/tiles-dark.png`. HA follows the emulated
+browser color preference; the script waits for HA's theme and checks different card
+backgrounds before capturing. The README selects the image with `<picture>` sources
+and keeps the light image as a fallback.
 
 See [the recorded live check](docs/live-check.md). Automated CI has no live DHL dependency.
 
