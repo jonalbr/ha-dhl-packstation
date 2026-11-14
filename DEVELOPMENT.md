@@ -24,9 +24,20 @@ UV_PROJECT_ENVIRONMENT=.venv-linux uv run --locked --group ha-test pytest tests 
 ```
 
 The separate Linux environment preserves the Windows `.venv` and survives WSL clearing
-`/tmp`. The `ha-test` group has Linux platform markers. `pytest-homeassistant` and
-Home Assistant are both pinned to 2026.11.1; do not install the overlapping older
-custom-component test plugin or override dependencies to force compatibility.
+`/tmp`. The `ha-test` group has Linux platform markers. Its Home Assistant and
+`pytest-homeassistant` versions are both pinned to 2026.11.1.
+
+The minimum-version suite has a separate project and lockfile in `tests/compat`:
+
+```console
+UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-minimum-venv" uv sync --locked --project tests/compat
+UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-minimum-venv" uv run --locked --project tests/compat pytest tests --disable-socket --allow-unix-socket --cov=custom_components/dhl_packstation_monitor --cov-branch --cov-report=term-missing --cov-fail-under=100
+```
+
+It pins HA 2026.9.0 and its matching `pytest-homeassistant-custom-component` 0.13.363.
+Run the same suite in both environments. Keep the two plugins and their HA dependency
+sets separate; no dependency overrides are needed. CI checks both supported endpoints
+and the package checker ties the installation minimum to the minimum test project's pin.
 The unrelated respx pytest plugin is disabled so HA can initialize its HTTP aliases.
 Coverage targets the component directory and gates all integration statements and branches.
 Ruff uses its default lint rules and 88-character formatter width; no custom selects
@@ -44,13 +55,18 @@ UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --
 UV_PROJECT_ENVIRONMENT="$HOME/.cache/ha-dhl-packstation-venv" uv run --locked --group ha-test --group smoke python scripts/live_smoke.py
 ```
 
+For the minimum version, sync `tests/compat` with `--group smoke` and run the same
+script through that project's environment. Its frontend and optional HA UI packages
+are pinned to the versions declared by HA 2026.9.0.
+
 The script starts a fresh HA instance on an unused localhost port with its own generated
 account, confirms that instance's HTTP listener through HA's API, and uses the real DHL
 service. It checks the location flow, seven entities per station, device links, tile
 content for all three variants at desktop and mobile widths, optional capacity editing,
 home-location clearing, and the more-info dialog. Manual capacities in its screenshots
 are illustrative, not measured locker totals. It stops its server
-even when a check fails. Screenshots, logs and the result live under ignored `.smoke/`;
+even when a check fails. Screenshots, logs and the result live under ignored
+`.smoke/<HA version>/`;
 temporary authentication data must never be committed. It does not contact the user's HA.
 
 See [the recorded live check](docs/live-check.md). Automated CI has no live DHL dependency.
@@ -60,8 +76,11 @@ See [the recorded live check](docs/live-check.md). Automated CI has no live DHL 
 Edit `custom_components/dhl_packstation_monitor/brand/icon.svg`, then run
 `uv run python scripts/build_brand.py`. The pinned resvg renderer exports the 256px
 and 512px PNGs without a graphics application. CI checks both exports against the
-SVG master on Windows and Linux. The drawing uses editable geometric groups and
-contains no embedded bitmap or DHL wordmark.
+SVG master on Windows and Linux. The locker and magnifying-glass outline use editable
+geometric groups; the lens leaves the compartments at their original scale. The DHL
+wordmark is embedded as vector paths from
+[selfh.st Icons](https://cdn.jsdelivr.net/gh/selfhst/icons/svg/dhl.svg), so rendering
+requires no external assets, fonts or network access. The drawing contains no bitmaps.
 
 ## Boundaries
 

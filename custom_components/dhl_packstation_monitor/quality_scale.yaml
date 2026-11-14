@@ -17,7 +17,7 @@ rules:
     comment: "Native initial, options and station subentry flows; no YAML setup."
   config-flow-test-coverage:
     status: done
-    comment: "Real HA 2026.11.1 flow-manager tests enforce 100% statement and branch coverage."
+    comment: "Real HA 2026.9.0 and 2026.11.1 flow-manager tests enforce 100% statement and branch coverage."
   dependency-transparency:
     status: done
     comment: "No additional runtime packages; aiohttp is supplied by Home Assistant."

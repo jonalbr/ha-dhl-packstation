@@ -1,1 +1,1 @@
-"""Tests against Home Assistant 2026.11.1."""
+"""Tests against minimum and current supported Home Assistant versions."""

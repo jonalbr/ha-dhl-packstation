@@ -13,7 +13,7 @@ This is an independent community integration, not an official DHL product.
 
 ## Requirements
 
-- Tested with Home Assistant **2026.11.1** (others may work as well).
+- Home Assistant **2026.9.0 or later**. Tested with **2026.9.0** and **2026.11.1**.
 - HTTPS access to `www.dhl.de`.
 - A Packstation listed by DHL. Some stations provide no live compartment data.
 

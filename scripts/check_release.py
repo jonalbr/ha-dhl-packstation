@@ -33,7 +33,13 @@ def check():
     for key in ("documentation", "issue_tracker"):
         assert manifest[key].startswith("https://github.com/jonalbr/ha-dhl-packstation")
     hacs = json.loads((ROOT / "hacs.json").read_text(encoding="utf-8"))
-    assert hacs["homeassistant"] == "2026.11.1"
+    minimum_tests = tomllib.loads(
+        (ROOT / "tests/compat/pyproject.toml").read_text(encoding="utf-8")
+    )
+    assert (
+        f"homeassistant=={hacs['homeassistant']}"
+        in minimum_tests["project"]["dependencies"]
+    )
     assert hacs["country"] == "DE"
     english = json.loads(
         (COMPONENT / "translations/en.json").read_text(encoding="utf-8")

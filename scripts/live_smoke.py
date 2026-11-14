@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from importlib.metadata import version
 from pathlib import Path
 
 import requests
@@ -18,8 +19,8 @@ DOMAIN = "dhl_packstation_monitor"
 def run():
     from playwright.sync_api import sync_playwright
 
-    artifacts = ROOT / ".smoke"
-    artifacts.mkdir(exist_ok=True)
+    artifacts = ROOT / ".smoke" / version("homeassistant")
+    artifacts.mkdir(parents=True, exist_ok=True)
     config = Path(tempfile.mkdtemp(prefix="instance-", dir=artifacts))
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
@@ -334,7 +335,7 @@ def run():
                     home = page.get_by_text("Home", exact=True)
                     home.wait_for(state="visible")
                     page.screenshot(path=str(artifacts / "home-location.png"))
-                    page.get_by_role("button", name="Clear", exact=True).click()
+                    page.locator("ha-picker-field .clear").click()
                     home.wait_for(state="hidden")
                     page.screenshot(path=str(artifacts / "home-location-cleared.png"))
                     page.locator("ha-picker-field").click()
@@ -381,7 +382,7 @@ def run():
                     raise
                 browser.close()
             report = {
-                "homeassistant": "2026.11.1",
+                "homeassistant": version("homeassistant"),
                 "stations": selected,
                 "entities": len(own_entities),
                 "devices": len(selected),
