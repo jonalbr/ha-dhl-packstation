@@ -5,8 +5,14 @@ from unittest.mock import MagicMock
 from homeassistant.components import frontend
 from homeassistant.setup import async_setup_component
 
-from custom_components.dhl_packstation_monitor import async_setup
-from custom_components.dhl_packstation_monitor.const import CARD_URL, VERSION
+from custom_components.dhl_packstation_monitor import CONFIG_SCHEMA, async_setup
+from custom_components.dhl_packstation_monitor.const import CARD_URL, DOMAIN, VERSION
+
+
+def test_entry_only_config_schema(caplog):
+    assert CONFIG_SCHEMA({"http": {}}) == {"http": {}}
+    CONFIG_SCHEMA({DOMAIN: {}})
+    assert f"{DOMAIN} integration does not support YAML setup" in caplog.text
 
 
 async def test_bundled_card_served_and_registered(hass, hass_client):

@@ -9,7 +9,7 @@ are exempt because the integration provides none. Setup validates every station 
 making unrelated stations unavailable when a read fails.
 
 Verification on 2026-11-15 with Python 3.14.10: 69 portable tests pass on Windows;
-53 framework tests pass against Home Assistant 2026.11.1 with its matching official
+54 framework tests pass against Home Assistant 2026.11.1 with its matching official
 test plugin. Config-flow statement and branch coverage are both 100%. Runtime tests
 cover devices, subentry links, stable identities, partial data, independent failures,
 expiry without requests, recovery, one reload per change and complete unload.
@@ -20,11 +20,11 @@ during setup and Add station. They also cover skipping totals, cancelling a part
 walkthrough and duplicate stations added during the walkthrough.
 Display metadata cannot alter counts.
 
-The combined 122-test Linux run covers all integration modules with 100% statements and
-branches (596 statements, 156 branches). CI targets HA 2026.11.1 and enforces this
+The combined 123-test Linux run covers all integration modules with 100% statements and
+branches (601 statements, 156 branches). CI targets HA 2026.11.1 and enforces this
 combined coverage threshold; the portable Windows/Linux jobs remain separate.
 
-The same 122-test suite also passed on the minimum supported HA 2026.9.0 with
+The same 123-test suite also passed on the minimum supported HA 2026.9.0 with
 its matching legacy test plugin 0.13.363, with 100% statements and branches. The
 separate live check also verified that version. Minimum-version rechecks use an
 isolated disposable copy, following the Tado integration's approach; the old HA

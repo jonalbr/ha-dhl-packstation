@@ -12,6 +12,18 @@ if TYPE_CHECKING:
     from .coordinator import StationCoordinator
 
 
+def _config_schema(config):
+    """Keep pure imports portable and declare config-entry-only setup in HA."""
+    from homeassistant.helpers import config_validation as cv
+
+    from .const import DOMAIN
+
+    return cv.config_entry_only_config_schema(DOMAIN)(config)
+
+
+CONFIG_SCHEMA = _config_schema
+
+
 @dataclass
 class MonitorRuntime:
     client: PackstationClient
