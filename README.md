@@ -36,18 +36,6 @@ For updates, update through HACS and restart Home Assistant.
 
 </details>
 
-### Manual installation
-
-Download the integration ZIP from [GitHub releases](https://github.com/jonalbr/ha-dhl-packstation/releases).
-Create `<config>/custom_components/dhl_packstation_monitor/` and extract the ZIP's
-files directly into that folder. It must contain `manifest.json`, without an extra
-nested component folder. Alternatively, copy `custom_components/dhl_packstation_monitor`
-from a repository checkout into your Home Assistant configuration's `custom_components`
-directory. Restart Home Assistant, then continue with [setup](#setup).
-
-For manual updates, replace the component files with the new version and restart
-Home Assistant.
-
 ## Setup
 
 1. Open **Settings > Devices & services > Add integration > DHL Packstation Monitor**.
@@ -106,8 +94,6 @@ when HA last tried to fetch it, and when a fetch last succeeded. A successful po
 still return stale or incomplete data and leave **Problem** active. A failed poll
 updates only the attempt time and retains the previous source and successful-poll times.
 Poll times describe the current integration run; they are not restored across restarts.
-The German names are **Datenstand bei DHL**, **Letzter Abrufversuch** and
-**Letzter erfolgreicher Abruf**. Existing entity IDs and user-defined names are preserved.
 
 The diagnostic's `reason` attribute distinguishes `cannot_connect`, `station_not_found`,
 `invalid_response`, `rate_limited`, `missing_data`, `missing_timestamp`, `future_timestamp`,
@@ -139,16 +125,13 @@ One station's failure does not prevent the others from loading.
 
 The included **DHL Packstation** card lets you choose a station and display mode in
 the graphical editor. It uses Home Assistant's native Tile appearance and supports
-all three variants below. The three native Tile examples remain available as alternatives.
+all three variants below. As alternatives, below are three native Tile examples as well.
 
-After installing or updating the integration and restarting Home Assistant, reload
-your browser. Edit a dashboard, choose **Add card > By card**, and search for **DHL Packstation**.
-Select the station and one of the three display modes; name and icon overrides are
-optional. Save the card. No separate card installation or manual resource entry is needed.
+Edit a dashboard, choose **Add card > By card**, and search for **DHL Packstation**.
+Select the station and one of the three display modes.
 
 The card is bundled with the integration and loaded locally when HA's frontend is
-enabled. It makes no requests to DHL; it uses the integration's existing station data.
-Tapping either the card or its icon opens the normal diagnostic details.
+enabled.
 
 For YAML configuration, see [card.yaml](examples/card.yaml). Its `display_mode` is
 `free` (default), `total`, or `capacities`.
@@ -204,9 +187,7 @@ in your automations; the integration creates no custom actions or triggers.
 ## Limits and privacy
 
 This uses the **DHL website's undocumented service**. Fields, access restrictions and
-URLs can change. Counts can be delayed and do not reserve a compartment or guarantee
-availability when you arrive. This integration cannot open lockers, track parcels or
-provide utilization forecasts.
+URLs can change.
 
 Search text or selected home coordinates are sent to DHL and exist only in the active
 setup dialog. Saved settings contain selected public stations, polling options and any
