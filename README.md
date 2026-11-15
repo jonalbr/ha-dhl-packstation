@@ -51,11 +51,16 @@ Home Assistant.
 ## Setup
 
 1. Open **Settings > Devices & services > Add integration > DHL Packstation Monitor**.
-2. Search an address or postal code, or enter a station's postal code and number.
+2. Search using one line, for example `10117` or `Georgenstraße 31, 10117 Berlin`
+   (street and house number, postal code and city). Alternatively, enter a station's
+   postal code and number.
 3. Select the stations and check their addresses in the preview. Counts shown as
    `—` are unknown or old. A `⚠` means the location could not be verified: retry or
    deselect it.
-4. Confirm. Each station becomes one device under the central integration entry.
+4. Optionally select **Enter compartment totals now** to enter the maximum S/M/L/XL
+   counts for each selected station in turn. Leave it off to finish immediately.
+   Unknown totals can stay empty; you can add or change them later under **Edit station**.
+5. Confirm. Each station becomes one device under the central integration entry.
 
 Search selects **Home** when valid home coordinates exist.
 Home Assistant stores coordinates, not a street address. Click **X** to clear the
@@ -68,10 +73,12 @@ rechecks the same DHL identifier; use Add station for a different location. Rena
 does not change entity identities. Device names explicitly overridden in Home Assistant
 remain under your control.
 
-**Edit station > Compartment totals** contains four optional fields for S/M/L/XL.
+Setup and **Add station** offer four optional compartment totals for S/M/L/XL.
+You can also enter them later under **Edit station > Compartment totals**.
 DHL supplies no totals per size. You can count compartments on site or from a clear
 photo, then enter or change the numbers here at any time. Leave unknown sizes empty;
-clearing a field removes its saved value. These numbers affect only the optional
+0 means the station has no compartments of that size. Clearing a field removes its
+saved value. These numbers affect only the optional
 capacity tile and never replace DHL measurements or change availability checks.
 
 Removing a station stops its polling and removes its entities. It does not remove other
@@ -79,18 +86,28 @@ stations. The central entry can remain empty so you can add stations again later
 
 ## Entities
 
-Every station has seven entities:
+Every station has nine entities:
 
 | Entity | Meaning |
 | --- | --- |
 | Free S / M / L / XL compartments | Four exact nonnegative counts reported by DHL |
 | Free compartments total | Sum, available only when all four sizes are known |
-| DHL data timestamp | Last valid source timestamp, including after a failed request |
-| Data problem | Diagnostic for failed, missing, stale or incomplete data |
+| DHL last updated | DHL's last valid source timestamp, retained after a failed request |
+| Last poll attempt | When Home Assistant last attempted to fetch this station |
+| Last successful poll | When Home Assistant last received and parsed a response successfully |
+| Problem | Diagnostic for failed, missing, stale or incomplete data |
 
 Zero means no free compartment of that size. `Unavailable` does not mean zero.
 A missing size affects that size and the total; valid sizes remain usable if fresh.
 Counts support Home Assistant history and measurement statistics, not cumulative totals.
+
+The three diagnostic timestamps answer different questions: how old DHL's data is,
+when HA last tried to fetch it, and when a fetch last succeeded. A successful poll can
+still return stale or incomplete data and leave **Problem** active. A failed poll
+updates only the attempt time and retains the previous source and successful-poll times.
+Poll times describe the current integration run; they are not restored across restarts.
+The German names are **Datenstand bei DHL**, **Letzter Abrufversuch** and
+**Letzter erfolgreicher Abruf**. Existing entity IDs and user-defined names are preserved.
 
 The diagnostic's `reason` attribute distinguishes `cannot_connect`, `station_not_found`,
 `invalid_response`, `rate_limited`, `missing_data`, `missing_timestamp`, `future_timestamp`,
@@ -116,7 +133,27 @@ Requests share a client and run sequentially. HTTP 429 pauses requests for at le
 failures retry on the normal polling schedule. Changing settings reloads the entry once.
 One station's failure does not prevent the others from loading.
 
-## Compact tiles
+## Dashboard
+
+### DHL Packstation card
+
+The included **DHL Packstation** card lets you choose a station and display mode in
+the graphical editor. It uses Home Assistant's native Tile appearance and supports
+all three variants below. The three native Tile examples remain available as alternatives.
+
+After installing or updating the integration and restarting Home Assistant, reload
+your browser. Edit a dashboard, choose **Add card > By card**, and search for **DHL Packstation**.
+Select the station and one of the three display modes; name and icon overrides are
+optional. Save the card. No separate card installation or manual resource entry is needed.
+
+The card is bundled with the integration and loaded locally when HA's frontend is
+enabled. It makes no requests to DHL; it uses the integration's existing station data.
+Tapping either the card or its icon opens the normal diagnostic details.
+
+For YAML configuration, see [card.yaml](examples/card.yaml). Its `display_mode` is
+`free` (default), `total`, or `capacities`.
+
+### Native Tile alternatives
 
 Three native Tile examples use these attributes:
 
@@ -128,12 +165,12 @@ Three native Tile examples use these attributes:
 
 The total sensor exposes these attributes. The diagnostic exposes them even when counts
 are unavailable: Home Assistant removes extra attributes from unavailable entities.
-Use this diagnostic as the native Tile's entity; no custom frontend is installed.
-Replace the example entity ID with your station's actual data-problem diagnostic:
+Use this diagnostic as the native Tile's entity. These examples work independently
+of the DHL card. Replace the example entity ID with your station's actual Problem entity:
 
 ```yaml
 type: tile
-entity: binary_sensor.replace_with_your_station_data_problem
+entity: binary_sensor.replace_with_your_station_problem
 name: Packstation 407
 icon: mdi:package-variant-closed
 color: amber

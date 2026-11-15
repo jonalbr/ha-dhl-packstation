@@ -21,7 +21,7 @@ async def test_manual_denominators_are_display_only_and_survive_reload(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     registry = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    assert len(registry) == 7
+    assert len(registry) == 9
     entity_ids = {entity.unique_id: entity.entity_id for entity in registry}
     diagnostic = hass.states.get(entity_ids["1-10117407_data_problem"])
     assert diagnostic.state == "off"

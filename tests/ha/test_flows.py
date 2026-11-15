@@ -65,6 +65,98 @@ async def test_initial_multi_station(hass, api):
     assert duplicate["reason"] == "single_instance_allowed"
 
 
+async def test_initial_capacity_walkthrough_keeps_totals_with_each_station(
+    hass, api, observations
+):
+    result = await start(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": "10117"}
+    )
+    selected = ["1-10117408", "1-10117407"]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": selected}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": selected, "configure_capacities": True}
+    )
+    assert result["step_id"] == "capacities"
+    assert result["description_placeholders"] == {
+        "station": f"Packstation 408 · {observations[selected[0]].station.address}",
+        "current": "1",
+        "total": "2",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"s": 12.0, "m": 0}}
+    )
+    assert result["step_id"] == "capacities"
+    assert result["description_placeholders"] == {
+        "station": f"Packstation 407 · {observations[selected[1]].station.address}",
+        "current": "2",
+        "total": "2",
+    }
+    assert not hass.config_entries.async_entries(DOMAIN)
+    with patch(
+        "custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True
+    ):
+        # All fields may be left empty, even after entering another station's totals.
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    assert len(entry.subentries) == 2
+    by_key = {sub.unique_id: sub for sub in entry.subentries.values()}
+    assert by_key[selected[0]].data[CONF_DISPLAY_CAPACITIES] == {"s": 12, "m": 0}
+    assert by_key[selected[1]].data[CONF_DISPLAY_CAPACITIES] == {}
+    assert entry.options == {CONF_INTERVAL: 15, CONF_MAX_AGE: 60}
+
+
+@pytest.mark.parametrize("configure_capacities", [False, True])
+async def test_initial_direct_can_finish_with_or_without_totals(
+    hass, api, configure_capacities
+):
+    result = await start(hass, "direct")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"postal_code": "10117", "station_number": "407"}
+    )
+    with patch(
+        "custom_components.dhl_packstation_monitor.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"stations": ["1-10117407"], "configure_capacities": configure_capacities},
+        )
+        if configure_capacities:
+            assert result["step_id"] == "capacities"
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"xl": 5}}
+            )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = next(iter(result["result"].subentries.values()))
+    assert subentry.data.get(CONF_DISPLAY_CAPACITIES, {}) == (
+        {"xl": 5} if configure_capacities else {}
+    )
+
+
+async def test_cancel_capacity_walkthrough_does_not_save_partial_setup(hass, api):
+    result = await start(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"address": "10117"}
+    )
+    selected = ["1-10117407", "1-10117408"]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": selected}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"stations": selected, "configure_capacities": True}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"s": 12}}
+    )
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 async def test_cancel_before_confirmation_leaves_no_entry(hass, api):
     result = await start(hass, "direct")
     result = await hass.config_entries.flow.async_configure(
@@ -203,6 +295,92 @@ async def test_subentry_search_add_and_duplicate(hass, api, entry_factory):
         result["flow_id"], {"postal_code": "10117", "station_number": "407"}
     )
     assert result["errors"] == {"base": "already_configured"}
+
+
+@pytest.mark.parametrize("path", ["search", "direct"])
+async def test_add_station_can_enter_totals_and_recover_from_invalid_values(
+    hass, api, entry_factory, path
+):
+    entry = entry_factory()
+    original = next(iter(entry.subentries.values()))
+    original_data = dict(original.data)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station"), context={"source": "user"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": path}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"address": "10117"}
+        if path == "search"
+        else {"postal_code": "10117", "station_number": "408"},
+    )
+    if path == "search":
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"stations": "1-10117408"}
+        )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"stations": "1-10117408", "configure_capacities": True}
+    )
+    assert result["step_id"] == "capacities"
+    assert len(entry.subentries) == 1
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"s": 1.5, "m": 0}}
+    )
+    assert result["errors"] == {"base": "invalid_capacities"}
+    assert len(entry.subentries) == 1
+    capacity_field = next(iter(result["data_schema"].schema))
+    capacity_section = result["data_schema"].schema[capacity_field]
+    assert not capacity_section.options["collapsed"]
+    assert {
+        field.schema: field.description["suggested_value"]
+        for field in capacity_section.schema.schema
+        if field.description
+    } == {"s": 1.5, "m": 0}
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"s": 10, "m": 0}}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(entry.subentries) == 2
+    added = next(sub for sub in entry.subentries.values() if sub != original)
+    assert added.unique_id == "1-10117408"
+    assert added.data[CONF_DISPLAY_CAPACITIES] == {"s": 10, "m": 0}
+    assert original.data == original_data
+
+
+async def test_subentry_duplicate_appearing_during_capacity_entry(
+    hass, api, entry_factory, observations
+):
+    entry = entry_factory()
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "station"), context={"source": "user"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "direct"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"postal_code": "10117", "station_number": "408"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"stations": "1-10117408", "configure_capacities": True}
+    )
+    station = observations["1-10117408"].station
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType({"station": station.to_data()}),
+            subentry_type="station",
+            title=station.title,
+            unique_id=station.primary_key,
+        ),
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DISPLAY_CAPACITIES: {"s": 10}}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(entry.subentries) == 2
 
 
 async def test_subentry_duplicate_appearing_during_preview(

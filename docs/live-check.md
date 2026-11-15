@@ -27,5 +27,23 @@ from the same live data. HA followed the browser color preference; card backgrou
 were white and RGB 28/28/28 respectively. The README's `<picture>` selected the
 matching screenshot in both browser modes. Manual totals remain illustrative.
 
+The setup-flow follow-up on 2026-11-15 was checked with HA 2026.11.1. Initial setup
+walked through the optional compartment totals for both selected stations, accepting
+empty totals. The native Add station dialogs displayed the address-format example,
+the optional totals switch, and an expanded S/M/L/XL editor identifying the station
+and showing progress as 1 of 1. That Add station flow was left before saving; the
+existing station's Edit station form still loaded and cleared individual totals.
+The new dialog screenshots and result are under `.smoke/2026.11.1/`.
+
+The dashboard-card follow-up on 2026-11-15 used HA 2026.9.0 and 2026.11.1 with
+their matching frontends. The updated integration created two devices and 18
+entities, including the three distinct timestamp diagnostics for each station.
+The bundled card loaded without a manually registered dashboard resource and
+appeared in the card picker with a native Tile preview. In a separate temporary
+storage dashboard, its graphical editor changed the display mode, set and cleared
+a custom name, and selected another station before saving. The saved card rendered
+at 1280px and 375px in both themes and opened the standard diagnostic details.
+Artifacts and per-version result files remain under the ignored `.smoke/` directories.
+
 Reproduce with the commands in the development guide. No tag, release, catalog
 submission or production installation was made.

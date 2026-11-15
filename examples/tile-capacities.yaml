@@ -1,6 +1,6 @@
 # Per-size denominators are optional manual display values from Edit station.
 type: tile
-entity: binary_sensor.replace_with_your_station_data_problem
+entity: binary_sensor.replace_with_your_station_problem
 name: Packstation 407
 icon: mdi:package-variant-closed
 color: amber

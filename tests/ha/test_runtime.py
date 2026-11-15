@@ -13,7 +13,11 @@ try:
 except ModuleNotFoundError:
     from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
-from custom_components.dhl_packstation_monitor.const import CONF_INTERVAL, CONF_MAX_AGE
+from custom_components.dhl_packstation_monitor.const import (
+    CONF_INTERVAL,
+    CONF_MAX_AGE,
+    DOMAIN,
+)
 from custom_components.dhl_packstation_monitor.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -32,12 +36,12 @@ def states(hass, entry):
     }
 
 
-async def test_seven_entities_each_with_stable_registry_links(hass, api, entry_factory):
+async def test_nine_entities_each_with_stable_registry_links(hass, api, entry_factory):
     entry = entry_factory(2)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     registered = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    assert len(registered) == 14
+    assert len(registered) == 18
     assert {item.config_subentry_id for item in registered} == set(entry.subentries)
     assert (
         len(dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)) == 2
@@ -106,9 +110,92 @@ async def test_missing_data_and_all_station_failures_do_not_block_setup(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     values = states(hass, entry)
-    assert len(values) == 14
+    assert len(values) == 18
     assert values["1-10117407_source_timestamp"].state == "unavailable"
+    assert values["1-10117407_last_successful_poll"].state == "unavailable"
+    assert values["1-10117407_last_poll_attempt"].state != "unavailable"
     assert values["1-10117408_data_problem"].attributes["reason"] == "rate_limited"
+
+
+async def test_source_and_poll_timestamps_are_distinct(
+    hass, api, entry_factory, observations, freezer
+):
+    freezer.move_to(dt_util.utcnow().replace(microsecond=0))
+    entry = entry_factory()
+    source_time = dt_util.utcnow() - timedelta(minutes=10)
+    original = replace(observations["1-10117407"], source_timestamp=source_time)
+    observations["1-10117407"] = original
+    attempted = dt_util.utcnow()
+
+    async def delayed_response(key):
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=2))
+        return original
+
+    api.station.side_effect = delayed_response
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data.coordinators["station_407"]
+    successful = dt_util.utcnow()
+    values = states(hass, entry)
+    assert values["1-10117407_source_timestamp"].state == source_time.isoformat()
+    assert values["1-10117407_last_poll_attempt"].state == attempted.isoformat()
+    assert values["1-10117407_last_successful_poll"].state == successful.isoformat()
+
+    # A later failed request advances only the attempt, retaining the source and success.
+    freezer.move_to(successful + timedelta(minutes=1))
+    api.station.side_effect = PackstationError()
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    values = states(hass, entry)
+    assert values["1-10117407_last_poll_attempt"].state == dt_util.utcnow().isoformat()
+    assert values["1-10117407_last_successful_poll"].state == successful.isoformat()
+    assert values["1-10117407_source_timestamp"].state == source_time.isoformat()
+    assert values["1-10117407_data_problem"].state == "on"
+
+    # A valid response can still contain stale data: polling success is not freshness.
+    freezer.move_to(dt_util.utcnow() + timedelta(minutes=1))
+    stale_time = dt_util.utcnow() - timedelta(hours=2)
+    api.station.side_effect = None
+    api.station.return_value = replace(original, source_timestamp=stale_time)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    values = states(hass, entry)
+    assert (
+        values["1-10117407_last_successful_poll"].state == dt_util.utcnow().isoformat()
+    )
+    assert values["1-10117407_source_timestamp"].state == stale_time.isoformat()
+    assert values["1-10117407_data_problem"].attributes["reason"] == "stale_data"
+    assert values["1-10117407_free_s"].state == "unavailable"
+
+
+async def test_display_name_changes_preserve_existing_entity_ids_and_user_names(
+    hass, api, entry_factory
+):
+    entry = entry_factory()
+    registry = er.async_get(hass)
+    existing = [
+        registry.async_get_or_create(
+            domain,
+            DOMAIN,
+            f"1-10117407_{key}",
+            suggested_object_id=f"existing_dhl_{key}",
+            config_entry=entry,
+            config_subentry_id="station_407",
+        )
+        for domain, key in (
+            ("sensor", "source_timestamp"),
+            ("binary_sensor", "data_problem"),
+        )
+    ]
+    for item in existing:
+        registry.async_update_entity(item.entity_id, name="My custom name")
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    for item in existing:
+        registered = registry.async_get(item.entity_id)
+        assert registered.unique_id == item.unique_id
+        assert registered.name == "My custom name"
+        assert hass.states.get(item.entity_id) is not None
 
 
 async def test_expiry_without_http_and_invalid_future_source(
@@ -182,7 +269,7 @@ async def test_station_remove_and_add_runtime(hass, api, entry_factory):
     assert removed._cancel_expiry is None
     assert set(entry.runtime_data.coordinators) == {"station_408"}
     registered = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    assert len(registered) == 7
+    assert len(registered) == 9
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "station"), context={"source": "user"}
     )
@@ -197,7 +284,7 @@ async def test_station_remove_and_add_runtime(hass, api, entry_factory):
     )
     await hass.async_block_till_done()
     assert (
-        len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 14
+        len(er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)) == 18
     )
 
 

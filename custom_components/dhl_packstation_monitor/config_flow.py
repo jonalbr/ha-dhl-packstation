@@ -9,6 +9,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -31,6 +32,25 @@ from .const import (
 from .models import Observation, PackstationError, normalize_capacities
 
 
+def _capacity_section(*, collapsed):
+    return section(
+        probatio.Schema(
+            {
+                probatio.Optional(size): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0,
+                        max=1000,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                )
+                for size in ("s", "m", "l", "xl")
+            }
+        ),
+        {"collapsed": collapsed},
+    )
+
+
 class StationSteps:
     """Share location steps between initial setup and a new subentry."""
 
@@ -41,6 +61,8 @@ class StationSteps:
         self._candidates = {}
         self._selected = []
         self._observations: dict[str, Observation] = {}
+        self._capacities: dict[str, dict[str, int]] = {}
+        self._capacity_index = 0
         self._api = None
 
     def _client(self):
@@ -183,16 +205,19 @@ class StationSteps:
             if default
             else probatio.Required("stations")
         )
-        return probatio.Schema(
-            {
-                field: SelectSelector(
-                    SelectSelectorConfig(
-                        options=options,
-                        multiple=self._multiple,
-                    )
+        fields = {
+            field: SelectSelector(
+                SelectSelectorConfig(
+                    options=options,
+                    multiple=self._multiple,
                 )
-            }
-        )
+            )
+        }
+        if preview:
+            fields[probatio.Optional("configure_capacities", default=False)] = (
+                BooleanSelector()
+            )
+        return probatio.Schema(fields)
 
     def _read_selection(self, user_input):
         selected = user_input["stations"]
@@ -236,38 +261,92 @@ class StationSteps:
             elif await self._load_selected():
                 errors["base"] = "validation_failed"
             else:
-                subentries = [
-                    {
-                        "subentry_type": "station",
-                        "unique_id": key,
-                        "title": self._observations[key].station.title,
-                        "data": {"station": self._observations[key].station.to_data()},
-                    }
-                    for key in self._selected
-                ]
-                if self._multiple:
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=NAME,
-                        data={},
-                        subentries=subentries,
-                        options={
-                            CONF_INTERVAL: DEFAULT_INTERVAL,
-                            CONF_MAX_AGE: DEFAULT_MAX_AGE,
-                        },
-                    )
-                sub = subentries[0]
-                return self.async_create_entry(
-                    title=sub["title"],
-                    data=sub["data"],
-                    unique_id=sub["unique_id"],
-                )
+                if user_input.get("configure_capacities", False):
+                    return await self.async_step_capacities()
+                return self._create_stations()
         elif any(key not in self._observations for key in self._selected):
             errors["base"] = "validation_failed"
         return self.async_show_form(
             step_id="confirm",
             errors=errors,
-            data_schema=self._selection_schema(self._selected, preview=True),
+            data_schema=self.add_suggested_values_to_schema(
+                self._selection_schema(self._selected, preview=True), user_input
+            ),
+        )
+
+    async def async_step_capacities(self, user_input=None):
+        """Optionally collect display totals for each confirmed station."""
+        key = self._selected[self._capacity_index]
+        errors = {}
+        if user_input is not None:
+            try:
+                capacities = normalize_capacities(
+                    user_input.get(CONF_DISPLAY_CAPACITIES, {})
+                )
+            except ValueError:
+                errors["base"] = "invalid_capacities"
+            else:
+                self._capacities[key] = capacities
+                self._capacity_index += 1
+                if self._capacity_index == len(self._selected):
+                    return self._create_stations()
+                return await self.async_step_capacities()
+        return self.async_show_form(
+            step_id="capacities",
+            errors=errors,
+            description_placeholders={
+                "station": (
+                    f"Packstation {self._observations[key].station.number} · "
+                    f"{self._observations[key].station.address}"
+                ),
+                "current": str(self._capacity_index + 1),
+                "total": str(len(self._selected)),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Optional(CONF_DISPLAY_CAPACITIES): _capacity_section(
+                            collapsed=False
+                        ),
+                    }
+                ),
+                user_input,
+            ),
+        )
+
+    def _create_stations(self):
+        """Save all confirmed stations and any optional display totals together."""
+        if any(key in self._existing_keys() for key in self._selected):
+            return self.async_abort(reason="already_configured")
+        subentries = []
+        for key in self._selected:
+            data = {"station": self._observations[key].station.to_data()}
+            if key in self._capacities:
+                data[CONF_DISPLAY_CAPACITIES] = self._capacities[key]
+            subentries.append(
+                {
+                    "subentry_type": "station",
+                    "unique_id": key,
+                    "title": self._observations[key].station.title,
+                    "data": data,
+                }
+            )
+        if self._multiple:
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=NAME,
+                data={},
+                subentries=subentries,
+                options={
+                    CONF_INTERVAL: DEFAULT_INTERVAL,
+                    CONF_MAX_AGE: DEFAULT_MAX_AGE,
+                },
+            )
+        sub = subentries[0]
+        return self.async_create_entry(
+            title=sub["title"],
+            data=sub["data"],
+            unique_id=sub["unique_id"],
         )
 
 
@@ -330,21 +409,8 @@ class StationSubentryFlow(StationSteps, ConfigSubentryFlow):
                         probatio.Required(
                             "name", default=subentry.title
                         ): TextSelector(),
-                        probatio.Optional(CONF_DISPLAY_CAPACITIES): section(
-                            probatio.Schema(
-                                {
-                                    probatio.Optional(size): NumberSelector(
-                                        NumberSelectorConfig(
-                                            min=0,
-                                            max=1000,
-                                            step=1,
-                                            mode=NumberSelectorMode.BOX,
-                                        )
-                                    )
-                                    for size in ("s", "m", "l", "xl")
-                                }
-                            ),
-                            {"collapsed": True},
+                        probatio.Optional(CONF_DISPLAY_CAPACITIES): _capacity_section(
+                            collapsed=True
                         ),
                     }
                 ),

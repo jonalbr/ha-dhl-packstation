@@ -1,6 +1,10 @@
 {
   "domain": "dhl_packstation_monitor",
   "name": "DHL Packstation Monitor",
+  "after_dependencies": [
+    "frontend",
+    "http"
+  ],
   "categories": [
     "productivity_information"
   ],

@@ -24,6 +24,7 @@ def test_package_is_complete_and_deterministic(monkeypatch):
         assert "manifest.json" in names
         assert archive.read("LICENSE") == (ROOT / "LICENSE").read_bytes()
         assert "translations/de.json" in names
+        assert "www/dhl-packstation-card.js" in names
         assert "brand/icon.png" in names
         assert "brand/icon@2x.png" in names
         assert "brand/icon.svg" in names

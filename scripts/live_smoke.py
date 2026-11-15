@@ -17,7 +17,7 @@ DOMAIN = "dhl_packstation_monitor"
 
 
 def run():
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import expect, sync_playwright
 
     artifacts = ROOT / ".smoke" / version("homeassistant")
     artifacts.mkdir(parents=True, exist_ok=True)
@@ -128,7 +128,12 @@ def run():
             assert selected
             configure({"stations": selected})
             assert result["step_id"] == "confirm"
-            configure({"stations": selected})
+            configure({"stations": selected, "configure_capacities": True})
+            for index in range(1, len(selected) + 1):
+                assert result["step_id"] == "capacities"
+                assert result["description_placeholders"]["current"] == str(index)
+                assert result["description_placeholders"]["total"] == str(len(selected))
+                configure({})
             assert result["type"] == "create_entry"
             for _ in range(60):
                 station_states = [
@@ -181,13 +186,42 @@ def run():
                         }
                     )
                     subentries = (await ws.receive_json())["result"]
+                    await ws.send_json(
+                        {
+                            "id": 5,
+                            "type": "lovelace/dashboards/create",
+                            "url_path": "dhl-card-test",
+                            "title": "DHL card test",
+                            "mode": "storage",
+                            "show_in_sidebar": False,
+                            "require_admin": False,
+                        }
+                    )
+                    assert (await ws.receive_json())["success"]
+                    await ws.send_json(
+                        {
+                            "id": 6,
+                            "type": "lovelace/config/save",
+                            "url_path": "dhl-card-test",
+                            "config": {
+                                "views": [
+                                    {
+                                        "title": "Packstations",
+                                        "type": "sections",
+                                        "sections": [{"type": "grid", "cards": []}],
+                                    }
+                                ]
+                            },
+                        }
+                    )
+                    assert (await ws.receive_json())["success"]
                     return entities, devices, entry_id, subentries
 
             entities, devices, entry_id, subentries = asyncio.run(registry())
             own_entities = [
                 entity for entity in entities if entity["platform"] == DOMAIN
             ]
-            assert len(own_entities) == 7 * len(selected)
+            assert len(own_entities) == 9 * len(selected)
             station_device_ids = {entity["device_id"] for entity in own_entities}
             assert len(station_device_ids) == len(selected)
             assert station_device_ids <= {device["id"] for device in devices}
@@ -339,11 +373,95 @@ def run():
                 try:
                     tile.click(timeout=10000)
                     page.locator("ha-more-info-dialog").get_by_text(
-                        "Data problem", exact=True
+                        "Problem", exact=True
                     ).first.wait_for(state="visible", timeout=10000)
                 except Exception:
                     page.screenshot(path=str(artifacts / "more-info-failure.png"))
                     print(page.get_by_role("button").all_text_contents(), flush=True)
+                    raise
+                page.set_viewport_size({"width": 1280, "height": 900})
+                try:
+                    page.goto(base + "/dhl-card-test/0")
+                    page.wait_for_function(
+                        "window.customCards?.some(card => card.type === 'dhl-packstation-card')"
+                    )
+                    page.get_by_role(
+                        "button", name="Open dashboard menu", exact=True
+                    ).click()
+                    page.get_by_text("Edit dashboard", exact=True).click()
+                    page.get_by_role(
+                        "button", name="Add card", exact=True
+                    ).first.click()
+                    page.get_by_role("tab", name="By card", exact=True).click()
+                    page.get_by_role("textbox").fill("DHL")
+                    page.screenshot(
+                        path=str(artifacts / "dhl-card-picker.png"),
+                        animations="disabled",
+                    )
+                    page.get_by_text("DHL Packstation", exact=True).locator(
+                        ".."
+                    ).click()
+                    editor = page.locator("dhl-packstation-card-editor")
+                    editor.wait_for(state="visible")
+                    page.screenshot(
+                        path=str(artifacts / "dhl-card-editor.png"),
+                        animations="disabled",
+                    )
+                    mode_button = editor.get_by_role(
+                        "button", name="Display * Free compartments", exact=True
+                    )
+                    if mode_button.count():
+                        mode_button.click()
+                    else:
+                        editor.get_by_role("listitem").nth(1).click()
+                    page.get_by_text(
+                        "Free compartments and manual totals by size", exact=True
+                    ).click()
+                    name_input = editor.get_by_role("textbox", name="Name (optional)")
+                    name_input.fill("Near home")
+                    page.locator("dhl-packstation-card").get_by_text(
+                        "Near home", exact=True
+                    ).wait_for(state="visible")
+                    name_input.fill("")
+                    editor.locator("ha-entity-picker").click()
+                    entity_search = page.locator("ha-picker-combo-box input")
+                    entity_search.fill(diagnostics[1]["entity_id"])
+                    page.get_by_text(subentries[1]["title"], exact=True).last.click()
+                    page.locator("dhl-packstation-card").get_by_text(
+                        diagnostics[1]["attributes"]["compartment_capacity_summary"],
+                        exact=True,
+                    ).wait_for(state="visible")
+                    page.get_by_role("button", name="Save", exact=True).click()
+                    page.get_by_role("button", name="Done", exact=True).click()
+                    custom_card = page.locator("dhl-packstation-card")
+                    custom_card.wait_for(state="visible")
+                    card_entity = custom_card.evaluate("el => el._config.entity")
+                    assert card_entity == diagnostics[1]["entity_id"]
+                    state = call("GET", "/api/states/" + card_entity)
+                    custom_card.get_by_text(
+                        state["attributes"]["compartment_capacity_summary"], exact=True
+                    ).wait_for(state="visible")
+                    for scheme in ("light", "dark"):
+                        page.emulate_media(color_scheme=scheme)
+                        page.wait_for_function(
+                            "(dark) => document.querySelector('home-assistant')"
+                            "?.hass?.themes.darkMode === dark",
+                            arg=scheme == "dark",
+                        )
+                        for width in (1280, 375):
+                            page.set_viewport_size({"width": width, "height": 900})
+                            custom_card.screenshot(
+                                path=str(artifacts / f"dhl-card-{width}-{scheme}.png"),
+                                animations="disabled",
+                            )
+                            assert custom_card.bounding_box()["width"] <= width
+                    custom_card.click()
+                    page.locator("ha-more-info-dialog").get_by_text(
+                        "Problem", exact=True
+                    ).first.wait_for(state="visible")
+                except Exception:
+                    page.screenshot(path=str(artifacts / "dhl-card-ui-failure.png"))
+                    print(page.locator("body").aria_snapshot()[:12000], flush=True)
                     raise
                 page.set_viewport_size({"width": 1280, "height": 900})
                 page.goto(base + "/config/integrations/integration/" + DOMAIN)
@@ -356,6 +474,9 @@ def run():
                     ).click()
                     home = page.get_by_text("Home", exact=True)
                     home.wait_for(state="visible")
+                    page.get_by_text(
+                        "Georgenstraße 31, 10117 Berlin", exact=False
+                    ).wait_for(state="visible")
                     page.screenshot(path=str(artifacts / "home-location.png"))
                     page.locator("ha-picker-field .clear").click()
                     home.wait_for(state="hidden")
@@ -367,6 +488,27 @@ def run():
                         "Hamburg", exact=True
                     ).wait_for(state="visible")
                     page.screenshot(path=str(artifacts / "home-location-replaced.png"))
+                    page.get_by_role("button", name="Submit", exact=True).click()
+                    page.get_by_role("radio").first.check()
+                    page.get_by_role("button", name="Submit", exact=True).click()
+                    page.locator("ha-switch").click()
+                    expect(page.locator("ha-switch")).to_have_js_property(
+                        "checked", True
+                    )
+                    page.screenshot(path=str(artifacts / "confirm-capacities.png"))
+                    page.get_by_role("button", name="Submit", exact=True).click()
+                    page.get_by_text(
+                        "Compartment totals (1 of 1)", exact=True
+                    ).wait_for(state="visible")
+                    inputs = page.locator('input[type="number"]')
+                    inputs.first.wait_for(state="visible")
+                    assert inputs.count() == 4
+                    assert all(field.input_value() == "" for field in inputs.all())
+                    page.get_by_text(
+                        "Empty means unknown; 0 means there are no compartments of that size.",
+                        exact=False,
+                    ).wait_for(state="visible")
+                    page.screenshot(path=str(artifacts / "add-station-capacities.png"))
                     page.goto(base + "/config/integrations/integration/" + DOMAIN)
                     page.locator("ha-config-sub-entry-row").filter(
                         has_text=subentries[0]["title"]
@@ -415,9 +557,17 @@ def run():
                 "tile_mobile": True,
                 "tile_variants": list(variants),
                 "tile_color_schemes": tile_backgrounds,
+                "custom_card_picker": True,
+                "custom_card_visual_editor": True,
+                "custom_card_station_selection": True,
+                "custom_card_mobile_and_desktop": True,
+                "custom_card_light_and_dark": True,
                 "more_info": True,
                 "home_location_clear": True,
                 "home_location_replace": True,
+                "address_format_help": True,
+                "setup_capacity_walkthrough": True,
+                "add_station_capacity_dialog": True,
                 "manual_capacity_editor": True,
                 "manual_capacity_clear": True,
                 "manual_capacity_reconfigure": True,
