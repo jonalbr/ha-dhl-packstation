@@ -2,7 +2,7 @@
 
 DOMAIN = "dhl_packstation_monitor"
 NAME = "DHL Packstation Monitor"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 CARD_URL = f"/{DOMAIN}/dhl-packstation-card.js"
 API_BASE = "https://www.dhl.de/int-postfinder/webservice/rest/v1"
 CONF_INTERVAL = "scan_interval_minutes"

@@ -45,5 +45,11 @@ a custom name, and selected another station before saving. The saved card render
 at 1280px and 375px in both themes and opened the standard diagnostic details.
 Artifacts and per-version result files remain under the ignored `.smoke/` directories.
 
-Reproduce with the commands in the development guide. No tag, release, catalog
-submission or production installation was made.
+The 0.2.0 release candidate was rechecked on 2026-11-15 against both matching HA
+versions and frontends. Both completed the full setup, optional totals, graphical
+card editor, station selection, saved card, native Tile, theme and mobile checks.
+The release ZIP was checked for its 0.2.0 manifest and constant, bundled card,
+translations, license and direct-install folder structure.
+
+Reproduce with the commands in the development guide. Publication follows the
+[release procedure](../RELEASING.md).

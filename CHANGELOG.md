@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-11-15
 
 - Add a bundled DHL Packstation dashboard card with graphical station selection and
   three display modes. The three existing native Tile examples remain alternatives.
@@ -13,6 +13,11 @@
   option to finish without them and enter them later under Edit station.
 - Explain in setup and Edit station that empty totals mean unknown and 0 means the
   station has no compartments of that size.
+
+After updating, restart Home Assistant and reload your browser to load the bundled
+card. In the dashboard editor, choose Add card > By card and search for DHL Packstation.
+Existing entity IDs, user names and configured stations are retained. The minimum
+supported Home Assistant version remains 2026.9.0.
 
 ## 0.1.0 - 2026-11-15
 
