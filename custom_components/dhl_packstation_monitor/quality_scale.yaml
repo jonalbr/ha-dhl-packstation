@@ -47,7 +47,7 @@ rules:
     comment: "Entity identity derives from station identifier and entity key."
   has-entity-name:
     status: done
-    comment: "All seven entity types use device-context names and translation keys."
+    comment: "All nine entity types use device-context names and translation keys."
   runtime-data:
     status: done
     comment: "Typed MonitorRuntime is stored on ConfigEntry.runtime_data."

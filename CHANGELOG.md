@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Add a bundled DHL Packstation dashboard card with graphical station selection and
+  three display modes. The three existing native Tile examples remain alternatives.
+- Distinguish DHL's data timestamp, the last poll attempt, and the last successful
+  poll with three timestamp sensors per station. Each station now has nine entities.
+- Rename the diagnostic to Problem and clarify the source timestamp's name while
+  retaining existing entity identities and custom names.
+- Show address-format examples when setting up or adding a station.
+- Offer optional per-station S/M/L/XL totals during setup and Add station, with the
+  option to finish without them and enter them later under Edit station.
+- Explain in setup and Edit station that empty totals mean unknown and 0 means the
+  station has no compartments of that size.
+
 ## 0.1.0 - 2026-11-15
 
 - Support Home Assistant 2026.9.0 and later, tested at the minimum and 2026.11.1.

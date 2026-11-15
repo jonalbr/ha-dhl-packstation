@@ -1,4 +1,4 @@
-"""Stable station identity shared by seven entities."""
+"""Stable station identity shared by all station entities."""
 
 from urllib.parse import urlencode
 

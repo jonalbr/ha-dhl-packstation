@@ -43,6 +43,14 @@ jobs:
           --disable-socket --allow-unix-socket
           --cov=custom_components/dhl_packstation_monitor
           --cov-branch --cov-report=term-missing --cov-fail-under=100
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "24"
+      - run: node --test tests/frontend/card.test.mjs
   hacs:
     runs-on: ubuntu-latest
     steps:

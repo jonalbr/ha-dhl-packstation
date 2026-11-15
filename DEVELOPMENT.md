@@ -1,6 +1,8 @@
 # Development
 
 Use Python 3.14 and uv. Production uses Home Assistant's existing aiohttp session.
+The bundled card has no runtime JavaScript dependencies or build step. Its tests use
+Node.js 24 or later and run separately from the Python suites.
 
 ## Checks
 
@@ -14,6 +16,7 @@ uv run ruff format --check .
 uv run python scripts/build_brand.py --check
 uv run python scripts/check_release.py
 uv run python scripts/build_release.py
+node --test tests/frontend/card.test.mjs
 ```
 
 The real Home Assistant suite needs Linux. From this repository in Ubuntu/WSL:
@@ -62,9 +65,13 @@ running the same script. Keep its generated lockfile outside the repository.
 
 The script starts a fresh HA instance on an unused localhost port with its own generated
 account, confirms that instance's HTTP listener through HA's API, and uses the real DHL
-service. It checks the location flow, seven entities per station, device links, tile
+service. It checks the location flow, nine entities per station, device links, tile
 content for all three variants at desktop and mobile widths in native light and dark
-themes, optional capacity editing, home-location clearing, and the more-info dialog.
+themes, the optional setup capacity walkthrough, address-format help, the Add station
+capacity dialog, optional capacity editing, home-location clearing, and the more-info dialog.
+It also creates a separate temporary storage dashboard, adds the bundled card through
+the real card picker, configures its display mode, and checks desktop/mobile rendering
+in both themes and the standard more-info action.
 Manual capacities in its screenshots
 are illustrative, not measured locker totals. It stops its server
 even when a check fails. Screenshots, logs and the result live under ignored
@@ -98,6 +105,13 @@ requires no external assets, fonts or network access. The drawing contains no bi
   display capacities. Home coordinates are resolved only for a submitted home search.
 - The central entry holds typed runtime data and one coordinator per station.
 - Entities are explicitly attached to their config subentry and keep stable unique IDs.
+- Three independent diagnostic timestamps track source time, poll attempt and poll
+  success. A successful parsed response does not imply fresh or complete source data.
+- The optional frontend module is served as one static file and registered once at
+  integration setup through HA's extra-module API. Entry reloads do not register it
+  again or edit dashboard resources. The versioned URL changes with each release.
+- The custom card delegates rendering and more-info actions to the native Tile card;
+  its editor filters the integration's station diagnostics and localizes English/German.
 - One entry update listener reloads options and subentry changes. Flow methods do not
   perform a second reload. Unload cancels expiry callbacks and entity subscriptions.
 

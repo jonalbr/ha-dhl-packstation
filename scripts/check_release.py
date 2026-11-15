@@ -25,6 +25,13 @@ def check():
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     version = manifest["version"]
     assert version == project["project"]["version"]
+    # The frontend cache URL must change along with the published package version.
+    constant_version = re.search(
+        r'^VERSION = "([^"]+)"$',
+        (COMPONENT / "const.py").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    assert constant_version and constant_version[1] == version
     assert re.fullmatch(r"\d+\.\d+\.\d+(?:b\d+)?", version)
     assert manifest["domain"] == COMPONENT.name
     assert manifest["codeowners"] == ["@jonalbr"]
@@ -58,10 +65,12 @@ def check():
         "DEVELOPMENT.md",
         "RELEASING.md",
         "examples/tile.yaml",
+        "examples/card.yaml",
         "examples/tile-total.yaml",
         "examples/tile-capacities.yaml",
     ):
         assert (ROOT / name).is_file(), name
+    assert (COMPONENT / "www/dhl-packstation-card.js").is_file()
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert re.search(r"^## Unreleased\b", changelog, re.MULTILINE) or re.search(
         rf"^## {re.escape(version)}\b", changelog, re.MULTILINE

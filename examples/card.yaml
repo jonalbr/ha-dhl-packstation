@@ -1,0 +1,4 @@
+# Choose the station's Problem entity; this card is bundled with the integration.
+type: custom:dhl-packstation-card
+entity: binary_sensor.replace_with_your_station_problem
+display_mode: free

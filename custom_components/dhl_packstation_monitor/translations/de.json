@@ -15,6 +15,9 @@
         "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
         "data": {
           "address": "Adresse oder Postleitzahl"
+        },
+        "data_description": {
+          "address": "Alles in einer Zeile eingeben: `10117` oder `Georgenstraße 31, 10117 Berlin` (Straße und Hausnummer, PLZ und Ort)."
         }
       },
       "direct": {
@@ -32,9 +35,25 @@
       },
       "confirm": {
         "title": "Standorte prüfen und bestätigen",
-        "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen. Optionale Gesamtzahlen je Fachgröße lassen sich später unter Station bearbeiten ergänzen.",
+        "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.\n\n„Fach-Gesamtzahlen jetzt eingeben“ ist optional: Lass die Option ausgeschaltet, um die Einrichtung direkt abzuschließen. Schalte sie ein, um die maximalen Fachzahlen je Größe für jede Station einzugeben. Das geht auch später unter „Station bearbeiten“.",
         "data": {
-          "stations": "Bestätigte Stationen"
+          "stations": "Bestätigte Stationen",
+          "configure_capacities": "Fach-Gesamtzahlen jetzt eingeben (optional)"
+        }
+      },
+      "capacities": {
+        "title": "Fach-Gesamtzahlen ({current} von {total})",
+        "description": "{station}\n\nGesamtzahl der Fächer je Größe S/M/L/XL eingeben (maximale Fachzahlen, nicht die aktuell freien Fächer). DHL liefert keine Gesamtzahlen je Größe; zähle sie vor Ort oder anhand eines Fotos. Diese Werte dienen nur der Anzeige. Einzelne oder alle Felder können leer bleiben. Du kannst die Zahlen später unter „Station bearbeiten“ ergänzen oder ändern. Leer bedeutet unbekannt; 0 bedeutet, dass es keine Fächer dieser Größe gibt.",
+        "sections": {
+          "display_capacities": {
+            "name": "Fächer insgesamt (optional, nur Anzeige)",
+            "data": {
+              "s": "Gesamtzahl S",
+              "m": "Gesamtzahl M",
+              "l": "Gesamtzahl L",
+              "xl": "Gesamtzahl XL"
+            }
+          }
         }
       }
     },
@@ -71,6 +90,9 @@
           "description": "Zuhause ist vorausgewählt, sofern dein HA-Standort bekannt ist. Mit dem X leeren und eine andere Adresse oder PLZ eingeben. Erst beim Suchen werden die ausgewählte Adresse bzw. die Zuhause-Koordinaten an DHL gesendet; sie werden nicht gespeichert.",
           "data": {
             "address": "Adresse oder Postleitzahl"
+          },
+          "data_description": {
+            "address": "Alles in einer Zeile eingeben: `10117` oder `Georgenstraße 31, 10117 Berlin` (Straße und Hausnummer, PLZ und Ort)."
           }
         },
         "direct": {
@@ -88,17 +110,33 @@
         },
         "confirm": {
           "title": "Standorte prüfen und bestätigen",
-          "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen. Optionale Gesamtzahlen je Fachgröße lassen sich später unter Station bearbeiten ergänzen.",
+          "description": "Adresse und Fachzahlen prüfen. — bedeutet unbekannt, fehlend oder veraltet; die Station kann dennoch hinzugefügt werden. ⚠ bedeutet, dass die Station nicht geprüft werden konnte. Solche Stationen erneut prüfen oder abwählen.\n\n„Fach-Gesamtzahlen jetzt eingeben“ ist optional: Lass die Option ausgeschaltet, um die Einrichtung direkt abzuschließen. Schalte sie ein, um die maximalen Fachzahlen je Größe für jede Station einzugeben. Das geht auch später unter „Station bearbeiten“.",
           "data": {
-            "stations": "Bestätigte Stationen"
+            "stations": "Bestätigte Stationen",
+            "configure_capacities": "Fach-Gesamtzahlen jetzt eingeben (optional)"
           }
         },
         "reconfigure": {
           "title": "Station bearbeiten",
-          "description": "{station}: Name ändern und denselben Standort erneut prüfen. Eine andere Packstation über Station hinzufügen ergänzen. Optional kannst du die Gesamtzahl der Fächer je Größe vor Ort oder anhand eines Fotos abzählen und unten eintragen oder später ergänzen. Diese manuellen Werte dienen nur der Anzeige; sie ändern weder DHL-Sensorwerte noch die Verfügbarkeitsprüfung. Leere Felder bedeuten unbekannt und entfernen bisherige Angaben.",
+          "description": "{station}: Name ändern und denselben Standort erneut prüfen. Eine andere Packstation über Station hinzufügen ergänzen. Optional kannst du die Gesamtzahl der Fächer je Größe vor Ort oder anhand eines Fotos abzählen und unten eintragen oder später ergänzen. Diese manuellen Werte dienen nur der Anzeige; sie ändern weder DHL-Sensorwerte noch die Verfügbarkeitsprüfung. Leere Felder bedeuten unbekannt und entfernen bisherige Angaben. Leer bedeutet unbekannt; 0 bedeutet, dass es keine Fächer dieser Größe gibt.",
           "data": {
             "name": "Anzeigename"
           },
+          "sections": {
+            "display_capacities": {
+              "name": "Fächer insgesamt (optional, nur Anzeige)",
+              "data": {
+                "s": "Gesamtzahl S",
+                "m": "Gesamtzahl M",
+                "l": "Gesamtzahl L",
+                "xl": "Gesamtzahl XL"
+              }
+            }
+          }
+        },
+        "capacities": {
+          "title": "Fach-Gesamtzahlen ({current} von {total})",
+          "description": "{station}\n\nGesamtzahl der Fächer je Größe S/M/L/XL eingeben (maximale Fachzahlen, nicht die aktuell freien Fächer). DHL liefert keine Gesamtzahlen je Größe; zähle sie vor Ort oder anhand eines Fotos. Diese Werte dienen nur der Anzeige. Einzelne oder alle Felder können leer bleiben. Du kannst die Zahlen später unter „Station bearbeiten“ ergänzen oder ändern. Leer bedeutet unbekannt; 0 bedeutet, dass es keine Fächer dieser Größe gibt.",
           "sections": {
             "display_capacities": {
               "name": "Fächer insgesamt (optional, nur Anzeige)",
@@ -188,12 +226,18 @@
         }
       },
       "source_timestamp": {
-        "name": "DHL-Datenstand"
+        "name": "Datenstand bei DHL"
+      },
+      "last_poll_attempt": {
+        "name": "Letzter Abrufversuch"
+      },
+      "last_successful_poll": {
+        "name": "Letzter erfolgreicher Abruf"
       }
     },
     "binary_sensor": {
       "data_problem": {
-        "name": "Datenproblem",
+        "name": "Problem",
         "state_attributes": {
           "reason": {
             "name": "Grund",

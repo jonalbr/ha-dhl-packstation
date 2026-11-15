@@ -43,6 +43,8 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
             None,
         )
         self.last_source_timestamp = None
+        self.last_poll_attempt = None
+        self.last_successful_poll = None
         self._cancel_expiry = None
         self.failure_reason = "missing_data"
 
@@ -70,6 +72,7 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
         self.async_update_listeners()
 
     async def _async_update_data(self):
+        self.last_poll_attempt = dt_util.utcnow()
         try:
             observation = await self.client.station(self.subentry.unique_id)
         except RateLimited as err:
@@ -84,6 +87,7 @@ class StationCoordinator(DataUpdateCoordinator[Observation]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key=err.code
             ) from err
+        self.last_successful_poll = dt_util.utcnow()
         self.cancel_expiry()
         self.snapshot = observation
         timestamp = observation.source_timestamp

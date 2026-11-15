@@ -15,6 +15,9 @@
         "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
         "data": {
           "address": "Address or postal code"
+        },
+        "data_description": {
+          "address": "Use one line: `10117` or `Georgenstraße 31, 10117 Berlin` (street and house number, postal code and city)."
         }
       },
       "direct": {
@@ -32,9 +35,25 @@
       },
       "confirm": {
         "title": "Review and confirm locations",
-        "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations. Optional compartment totals per size can be added later under Edit station.",
+        "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.\n\n“Enter compartment totals now” is optional: leave it off to finish setup immediately, or turn it on to enter the maximum counts per size for each station. You can also add or change them later under Edit station.",
         "data": {
-          "stations": "Confirmed stations"
+          "stations": "Confirmed stations",
+          "configure_capacities": "Enter compartment totals now (optional)"
+        }
+      },
+      "capacities": {
+        "title": "Compartment totals ({current} of {total})",
+        "description": "{station}\n\nEnter the total number of S/M/L/XL compartments (maximum counts, not currently free compartments). DHL does not provide these per-size totals; count them on site or from a photo. These values are for display only. Leave any or all fields empty to continue. You can add or change totals later under Edit station. Empty means unknown; 0 means there are no compartments of that size.",
+        "sections": {
+          "display_capacities": {
+            "name": "Compartment totals (optional, display only)",
+            "data": {
+              "s": "Total S",
+              "m": "Total M",
+              "l": "Total L",
+              "xl": "Total XL"
+            }
+          }
         }
       }
     },
@@ -71,6 +90,9 @@
           "description": "Home is selected when your HA home location is available. Clear it with X to enter another address or postal code. The selected address or home coordinates are sent to DHL only when you submit the search, and are not saved.",
           "data": {
             "address": "Address or postal code"
+          },
+          "data_description": {
+            "address": "Use one line: `10117` or `Georgenstraße 31, 10117 Berlin` (street and house number, postal code and city)."
           }
         },
         "direct": {
@@ -88,17 +110,33 @@
         },
         "confirm": {
           "title": "Review and confirm locations",
-          "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations. Optional compartment totals per size can be added later under Edit station.",
+          "description": "Check the addresses and counts. — means unknown, missing or old data; the station can still be added. ⚠ means the station could not be verified. Retry or deselect these stations.\n\n“Enter compartment totals now” is optional: leave it off to finish setup immediately, or turn it on to enter the maximum counts per size for each station. You can also add or change them later under Edit station.",
           "data": {
-            "stations": "Confirmed stations"
+            "stations": "Confirmed stations",
+            "configure_capacities": "Enter compartment totals now (optional)"
           }
         },
         "reconfigure": {
           "title": "Edit station",
-          "description": "{station}: change the name and recheck the same location. Use Add station for a different Packstation. Optionally count the compartments per size on site or from a photo and enter or add them below later. These manual totals affect only the display, never DHL sensor values or availability checks. Empty fields mean unknown and remove previous values.",
+          "description": "{station}: change the name and recheck the same location. Use Add station for a different Packstation. Optionally count the compartments per size on site or from a photo and enter or add them below later. These manual totals affect only the display, never DHL sensor values or availability checks. Empty fields mean unknown and remove previous values. Empty means unknown; 0 means there are no compartments of that size.",
           "data": {
             "name": "Display name"
           },
+          "sections": {
+            "display_capacities": {
+              "name": "Compartment totals (optional, display only)",
+              "data": {
+                "s": "Total S",
+                "m": "Total M",
+                "l": "Total L",
+                "xl": "Total XL"
+              }
+            }
+          }
+        },
+        "capacities": {
+          "title": "Compartment totals ({current} of {total})",
+          "description": "{station}\n\nEnter the total number of S/M/L/XL compartments (maximum counts, not currently free compartments). DHL does not provide these per-size totals; count them on site or from a photo. These values are for display only. Leave any or all fields empty to continue. You can add or change totals later under Edit station. Empty means unknown; 0 means there are no compartments of that size.",
           "sections": {
             "display_capacities": {
               "name": "Compartment totals (optional, display only)",
@@ -188,12 +226,18 @@
         }
       },
       "source_timestamp": {
-        "name": "DHL data timestamp"
+        "name": "DHL last updated"
+      },
+      "last_poll_attempt": {
+        "name": "Last poll attempt"
+      },
+      "last_successful_poll": {
+        "name": "Last successful poll"
       }
     },
     "binary_sensor": {
       "data_problem": {
-        "name": "Data problem",
+        "name": "Problem",
         "state_attributes": {
           "reason": {
             "name": "Reason",
