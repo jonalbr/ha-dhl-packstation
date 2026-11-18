@@ -64,10 +64,7 @@ def check():
         "uv.lock",
         "DEVELOPMENT.md",
         "RELEASING.md",
-        "examples/tile.yaml",
         "examples/card.yaml",
-        "examples/tile-total.yaml",
-        "examples/tile-capacities.yaml",
     ):
         assert (ROOT / name).is_file(), name
     assert (COMPONENT / "www/dhl-packstation-card.js").is_file()

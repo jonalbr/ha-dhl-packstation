@@ -107,7 +107,8 @@ async def test_initial_capacity_walkthrough_keeps_totals_with_each_station(
     by_key = {sub.unique_id: sub for sub in entry.subentries.values()}
     assert by_key[selected[0]].data[CONF_DISPLAY_CAPACITIES] == {"s": 12, "m": 0}
     assert by_key[selected[1]].data[CONF_DISPLAY_CAPACITIES] == {}
-    assert entry.options == {CONF_INTERVAL: 15, CONF_MAX_AGE: 60}
+    assert entry.options == {}
+    assert entry.minor_version == 2
 
 
 @pytest.mark.parametrize("configure_capacities", [False, True])
@@ -453,6 +454,59 @@ async def test_options_defaults_validation_and_save(hass, entry_factory):
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {CONF_INTERVAL: 30, CONF_MAX_AGE: 90}
+
+
+@pytest.mark.parametrize("saved_age", [None, 60, 90])
+@pytest.mark.parametrize("saved_interval", [None, 15, 30])
+async def test_options_are_optional_clearable_and_preserve_other_options(
+    hass, entry_factory, saved_age, saved_interval
+):
+    options = {"unrelated": "preserve"}
+    if saved_interval is not None:
+        options[CONF_INTERVAL] = saved_interval
+    if saved_age is not None:
+        options[CONF_MAX_AGE] = saved_age
+    entry = entry_factory(options=options)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    age_field = next(
+        field for field in result["data_schema"].schema if field == CONF_MAX_AGE
+    )
+    assert isinstance(age_field, probatio.Optional)
+    assert (age_field.description or {}).get("suggested_value") == saved_age
+    interval_field = next(
+        field for field in result["data_schema"].schema if field == CONF_INTERVAL
+    )
+    assert isinstance(interval_field, probatio.Optional)
+    assert (interval_field.description or {}).get("suggested_value") == saved_interval
+    assert result["description_placeholders"] == {
+        "default_interval": "15",
+        "default_max_age": "75",
+    }
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {"unrelated": "preserve"}
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    age_field = next(
+        field for field in result["data_schema"].schema if field == CONF_MAX_AGE
+    )
+    assert "suggested_value" not in (age_field.description or {})
+    interval_field = next(
+        field for field in result["data_schema"].schema if field == CONF_INTERVAL
+    )
+    assert "suggested_value" not in (interval_field.description or {})
+
+
+@pytest.mark.parametrize("user_input", [{CONF_INTERVAL: 30}, {CONF_MAX_AGE: 90}])
+async def test_poll_interval_and_age_can_be_overridden_independently(
+    hass, entry_factory, user_input
+):
+    entry = entry_factory(options={})
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == user_input
 
 
 @pytest.mark.parametrize(

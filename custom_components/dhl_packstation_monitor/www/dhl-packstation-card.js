@@ -8,7 +8,7 @@ const MODES = {
 };
 const TEXT = {
   en: {
-    entity: "Packstation",
+    device_id: "Packstation",
     display_mode: "Display",
     name: "Name (optional)",
     icon: "Icon (optional)",
@@ -16,10 +16,13 @@ const TEXT = {
     total: "Free compartments and DHL total capacity",
     capacities: "Free compartments and manual totals by size",
     choose: "Add a Packstation to the integration, then select it here.",
-    entity_help: "Select the Packstation to display.",
+    device_id_help:
+      "Tap the card for the device; tap its icon for total-count history.",
     mode_help:
       "Manual totals are optional. Empty means unknown; 0 means no compartments of that size.",
-    invalid_entity: "Select a Packstation's Problem entity.",
+    invalid_entity: "Select a Packstation device.",
+    missing:
+      "This Packstation's entities are unavailable or disabled. Check the device in Settings.",
     invalid_mode: "Choose a supported display mode.",
     invalid_text: "Name and icon must be text.",
     load_failed: "The card could not be loaded. Reload the page to try again.",
@@ -27,7 +30,7 @@ const TEXT = {
       "Packstation availability with a station picker and three display modes.",
   },
   de: {
-    entity: "Packstation",
+    device_id: "Packstation",
     display_mode: "Darstellung",
     name: "Name (optional)",
     icon: "Symbol (optional)",
@@ -36,10 +39,13 @@ const TEXT = {
     capacities: "Freie Fächer und manuelle Gesamtzahlen je Größe",
     choose:
       "Füge der Integration eine Packstation hinzu und wähle sie hier aus.",
-    entity_help: "Wähle die Packstation für diese Karte aus.",
+    device_id_help:
+      "Tippe auf die Karte für das Gerät, auf das Symbol für den Verlauf der Gesamtzahl.",
     mode_help:
       "Manuelle Gesamtzahlen sind optional. Leer bedeutet unbekannt; 0 bedeutet keine Fächer dieser Größe.",
-    invalid_entity: "Wähle die Problem-Entität einer Packstation aus.",
+    invalid_entity: "Wähle ein Packstationsgerät aus.",
+    missing:
+      "Die Entitäten dieser Packstation sind nicht verfügbar oder deaktiviert. Prüfe das Gerät in den Einstellungen.",
     invalid_mode: "Wähle eine unterstützte Darstellung aus.",
     invalid_text: "Name und Symbol müssen Text sein.",
     load_failed:
@@ -58,15 +64,44 @@ function words(hass) {
 }
 
 function isStation(hass, entityId) {
+  const entry = hass?.entities?.[entityId];
   const attributes = hass?.states?.[entityId]?.attributes;
   return (
     entityId.startsWith("binary_sensor.") &&
-    typeof attributes?.station_id === "string" &&
-    typeof attributes?.compartment_summary === "string"
+    ((entry?.platform === DOMAIN && entry.translation_key === "data_problem") ||
+      (typeof attributes?.station_id === "string" &&
+        typeof attributes?.compartment_summary === "string"))
   );
 }
 
+function stationDevice(hass, deviceId) {
+  return (
+    hass?.devices?.[deviceId]?.identifiers?.some(([domain]) => domain === DOMAIN) ||
+    Object.values(hass?.entities ?? {}).some(
+      (entry) => entry.device_id === deviceId && entry.platform === DOMAIN,
+    )
+  );
+}
+
+function stationEntities(hass, config) {
+  const deviceId = config.device_id || hass?.entities?.[config.entity]?.device_id;
+  if (!deviceId) return { problem: config.entity };
+  const siblings = Object.entries(hass?.entities ?? {}).filter(
+    ([, entry]) => entry.device_id === deviceId && entry.platform === DOMAIN,
+  );
+  const find = (key) =>
+    siblings.find(([, entry]) => entry.translation_key === key)?.[0];
+  return {
+    deviceId,
+    problem: find("data_problem") || (!config.device_id ? config.entity : undefined),
+    total: find("free_total"),
+  };
+}
+
 function normalizeConfig(config, text) {
+  if (config.device_id !== undefined && typeof config.device_id !== "string") {
+    throw new Error(text.invalid_entity);
+  }
   if (
     config.entity !== undefined &&
     (typeof config.entity !== "string" ||
@@ -106,8 +141,14 @@ class DhlPackstationCard extends HTMLElement {
       ...entitiesFallback,
       ...Object.keys(hass?.states ?? {}),
     ];
+    const deviceId = candidates
+      .map((id) => hass?.entities?.[id])
+      .find((entry) => entry?.platform === DOMAIN && entry.device_id)?.device_id;
     return {
-      entity: candidates.find((id) => isStation(hass, id)) ?? "",
+      device_id:
+        deviceId ||
+        Object.keys(hass?.devices ?? {}).find((id) => stationDevice(hass, id)) ||
+        "",
       display_mode: "free",
     };
   }
@@ -145,7 +186,7 @@ class DhlPackstationCard extends HTMLElement {
 
   async _render() {
     if (!this._config || !this._hass) return;
-    if (!this._config.entity) {
+    if (!this._config.device_id && !this._config.entity) {
       this._message(words(this._hass).choose);
       return;
     }
@@ -153,14 +194,26 @@ class DhlPackstationCard extends HTMLElement {
     this._helpersPromise ??= window.loadCardHelpers();
     const helpers = await this._helpersPromise;
     const config = this._config;
-    if (!config.entity) return;
-    const state = this._hass.states[config.entity];
-    if (state && !isStation(this._hass, config.entity)) {
+    if (!config.device_id && !config.entity) return;
+    const { deviceId, problem, total } = stationEntities(this._hass, config);
+    if (
+      (config.device_id && !stationDevice(this._hass, config.device_id)) ||
+      (!config.device_id &&
+        this._hass.states[config.entity] &&
+        !isStation(this._hass, config.entity))
+    ) {
       this._message(words(this._hass).invalid_entity);
       return;
     }
-    const registry = this._hass.entities?.[config.entity];
-    const device = this._hass.devices?.[registry?.device_id];
+    // The diagnostic retains summaries when numeric sensors expire. Navigation
+    // and history are independent of this internal rendering source.
+    const entity = problem || total;
+    if (!entity) {
+      this._message(words(this._hass).missing);
+      return;
+    }
+    const state = this._hass.states[entity];
+    const device = this._hass.devices?.[deviceId];
     const name =
       config.name ||
       device?.name_by_user ||
@@ -170,12 +223,19 @@ class DhlPackstationCard extends HTMLElement {
         : undefined);
     const tileConfig = {
       type: "tile",
-      entity: config.entity,
+      entity,
       state_content: MODES[config.display_mode],
       icon: config.icon || "mdi:package-variant-closed",
       color: "amber",
-      tap_action: { action: "more-info" },
-      icon_tap_action: { action: "more-info" },
+      tap_action: deviceId
+        ? {
+            action: "navigate",
+            navigation_path: `/config/devices/device/${encodeURIComponent(deviceId)}`,
+          }
+        : { action: "none" },
+      icon_tap_action: total
+        ? { action: "more-info", entity: total }
+        : { action: "none" },
       ...(name ? { name } : {}),
     };
     const serialized = JSON.stringify(tileConfig);
@@ -213,9 +273,12 @@ class DhlPackstationCardEditor extends HTMLElement {
       this._form.addEventListener("value-changed", (event) => {
         event.stopPropagation();
         const config = {
+          ...this._config,
           ...event.detail.value,
           type: this._config.type ?? `custom:${CARD_TYPE}`,
         };
+        // Upgrade legacy entity-based cards only when the editor is saved.
+        if (Object.hasOwn(event.detail.value, "device_id")) delete config.entity;
         for (const field of ["name", "icon"]) {
           if (!config[field]) delete config[field];
         }
@@ -235,11 +298,11 @@ class DhlPackstationCardEditor extends HTMLElement {
       this._text = text;
       this._form.schema = [
         {
-          name: "entity",
+          name: "device_id",
           required: true,
           selector: {
-            entity: {
-              filter: [{ integration: DOMAIN, domain: "binary_sensor" }],
+            device: {
+              filter: [{ integration: DOMAIN }],
             },
           },
         },
@@ -261,14 +324,17 @@ class DhlPackstationCardEditor extends HTMLElement {
       ];
       this._form.computeLabel = (schema) => text[schema.name];
       this._form.computeHelper = (schema) =>
-        schema.name === "entity"
-          ? text.entity_help
+        schema.name === "device_id"
+          ? text.device_id_help
           : schema.name === "display_mode"
             ? text.mode_help
             : undefined;
     }
     this._form.hass = this._hass;
-    this._form.data = this._config;
+    this._form.data = {
+      ...this._config,
+      device_id: stationEntities(this._hass, this._config).deviceId || "",
+    };
   }
 }
 
@@ -285,12 +351,13 @@ if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
     preview: true,
     documentationURL: "https://github.com/jonalbr/ha-dhl-packstation#dashboard",
     getEntitySuggestion: (hass, entityId) =>
-      isStation(hass, entityId)
+      hass?.entities?.[entityId]?.platform === DOMAIN &&
+      hass.entities[entityId].device_id
         ? Object.keys(MODES).map((mode) => ({
             label: words(hass)[mode],
             config: {
               type: `custom:${CARD_TYPE}`,
-              entity: entityId,
+              device_id: hass.entities[entityId].device_id,
               display_mode: mode,
             },
           }))

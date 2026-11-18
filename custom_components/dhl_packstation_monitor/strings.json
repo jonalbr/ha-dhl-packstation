@@ -181,6 +181,10 @@
         "data": {
           "scan_interval_minutes": "Polling interval (minutes)",
           "max_age_minutes": "Maximum source age (minutes)"
+        },
+        "data_description": {
+          "scan_interval_minutes": "Recommended: {default_interval} minutes. Leave empty to follow the recommendation; enter a number for a fixed interval.",
+          "max_age_minutes": "Recommended: {default_max_age} minutes. Leave empty to follow the recommendation; enter a number for a fixed age limit."
         }
       }
     },
@@ -191,16 +195,72 @@
   "entity": {
     "sensor": {
       "free_s": {
-        "name": "Free S compartments"
+        "name": "Free S compartments",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "free_m": {
-        "name": "Free M compartments"
+        "name": "Free M compartments",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "free_l": {
-        "name": "Free L compartments"
+        "name": "Free L compartments",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "free_xl": {
-        "name": "Free XL compartments"
+        "name": "Free XL compartments",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "free_total": {
         "name": "Free compartments total",
@@ -222,17 +282,71 @@
           },
           "display_capacity_issues": {
             "name": "Manual totals below free counts"
+          },
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
           }
         }
       },
       "source_timestamp": {
-        "name": "DHL last updated"
+        "name": "DHL last updated",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "last_poll_attempt": {
-        "name": "Last poll attempt"
+        "name": "Last poll attempt",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       },
       "last_successful_poll": {
-        "name": "Last successful poll"
+        "name": "Last successful poll",
+        "state_attributes": {
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -270,6 +384,18 @@
           },
           "display_capacity_issues": {
             "name": "Manual totals below free counts"
+          },
+          "station_id": {
+            "name": "Station ID"
+          },
+          "station_number": {
+            "name": "Packstation number"
+          },
+          "postal_code": {
+            "name": "Postal code"
+          },
+          "address": {
+            "name": "Address"
           }
         }
       }

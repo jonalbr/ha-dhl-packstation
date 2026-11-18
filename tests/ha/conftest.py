@@ -13,7 +13,6 @@ except ModuleNotFoundError:
 from custom_components.dhl_packstation_monitor.api import PackstationClient
 from custom_components.dhl_packstation_monitor.const import (
     CONF_INTERVAL,
-    CONF_MAX_AGE,
     DOMAIN,
 )
 from custom_components.dhl_packstation_monitor.models import (
@@ -77,7 +76,7 @@ def api(observations):
 
 @pytest.fixture
 def entry_factory(hass, observations):
-    def create(count=1, options=None):
+    def create(count=1, options=None, version=1, minor_version=2):
         subentries = [
             {
                 "subentry_id": f"station_{observation.station.number}",
@@ -94,7 +93,9 @@ def entry_factory(hass, observations):
             data={},
             title="DHL Packstation Monitor",
             subentries_data=subentries,
-            options=options or {CONF_INTERVAL: 15, CONF_MAX_AGE: 60},
+            options=options if options is not None else {CONF_INTERVAL: 15},
+            version=version,
+            minor_version=minor_version,
         )
         entry.add_to_hass(hass)
         return entry

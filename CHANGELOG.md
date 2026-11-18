@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0 - 2026-11-18
+
+- Choose a Packstation device in the bundled card's graphical editor. Tapping the
+  card opens the device page; tapping its icon opens total-count details and history.
+  Existing Problem-entity card configurations remain supported.
+- Keep descriptive sensor names, including Free compartments total. Problem remains
+  a diagnostic and the internal source for the card's unavailable-data summaries.
+- Raise the default maximum source age to 75 minutes to accommodate occasional
+  hourly DHL updates and the polling interval. Migrate the old 60-minute default
+  to recommended mode. Clear the optional age field to follow the recommendation;
+  other saved limits stay fixed.
+- Make the polling interval clearable too. Both options display their recommendation
+  and accept a fixed override; clearing an override restores recommended mode.
+- Focus the README on the bundled card, show its preview near the top, and remove
+  the separate native Tile YAML examples.
+- Translate public station metadata labels in English and German.
+- Refresh development dependencies for HA 2026.11.2 and its matching frontend;
+  update CI to uv 0.13.9 and Node.js 26 LTS.
+- Check upstream versions and HA dependency alignment before publishing releases.
+
+After updating, restart Home Assistant and reload your browser. Existing station
+and entity identities, recorded history, and legacy card configurations are retained.
+The old 60-minute source-age setting switches to recommended mode automatically;
+other saved limits stay fixed. The minimum Home Assistant version remains 2026.9.0.
+
 ## 0.2.0 - 2026-11-15
 
 - Add a bundled DHL Packstation dashboard card with graphical station selection and

@@ -1,4 +1,5 @@
-# Choose the station's Problem entity; this card is bundled with the integration.
+# Choose the Packstation device in the visual editor to fill in device_id.
+# Tap the card for the device page; tap the icon for total-count history.
 type: custom:dhl-packstation-card
-entity: binary_sensor.replace_with_your_station_problem
+device_id: replace_with_your_packstation_device_id
 display_mode: free

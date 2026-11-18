@@ -181,6 +181,10 @@
         "data": {
           "scan_interval_minutes": "Abfrageintervall (Minuten)",
           "max_age_minutes": "Maximales Quellenalter (Minuten)"
+        },
+        "data_description": {
+          "scan_interval_minutes": "Empfohlen: {default_interval} Minuten. Leer lassen, um der Empfehlung zu folgen; eine Zahl legt ein festes Abfrageintervall fest.",
+          "max_age_minutes": "Empfohlen: {default_max_age} Minuten. Leer lassen, um der Empfehlung zu folgen; eine Zahl legt ein festes Datenalter fest."
         }
       }
     },
@@ -191,16 +195,72 @@
   "entity": {
     "sensor": {
       "free_s": {
-        "name": "Freie Fächer S"
+        "name": "Freie Fächer S",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "free_m": {
-        "name": "Freie Fächer M"
+        "name": "Freie Fächer M",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "free_l": {
-        "name": "Freie Fächer L"
+        "name": "Freie Fächer L",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "free_xl": {
-        "name": "Freie Fächer XL"
+        "name": "Freie Fächer XL",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "free_total": {
         "name": "Freie Fächer gesamt",
@@ -222,17 +282,71 @@
           },
           "display_capacity_issues": {
             "name": "Manuelle Gesamtzahlen unter freier Fachzahl"
+          },
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
           }
         }
       },
       "source_timestamp": {
-        "name": "Datenstand bei DHL"
+        "name": "Datenstand bei DHL",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "last_poll_attempt": {
-        "name": "Letzter Abrufversuch"
+        "name": "Letzter Abrufversuch",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       },
       "last_successful_poll": {
-        "name": "Letzter erfolgreicher Abruf"
+        "name": "Letzter erfolgreicher Abruf",
+        "state_attributes": {
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -270,6 +384,18 @@
           },
           "display_capacity_issues": {
             "name": "Manuelle Gesamtzahlen unter freier Fachzahl"
+          },
+          "station_id": {
+            "name": "Stations-ID"
+          },
+          "station_number": {
+            "name": "Packstationsnummer"
+          },
+          "postal_code": {
+            "name": "Postleitzahl"
+          },
+          "address": {
+            "name": "Adresse"
           }
         }
       }

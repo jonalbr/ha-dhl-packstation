@@ -337,10 +337,7 @@ class StationSteps:
                 title=NAME,
                 data={},
                 subentries=subentries,
-                options={
-                    CONF_INTERVAL: DEFAULT_INTERVAL,
-                    CONF_MAX_AGE: DEFAULT_MAX_AGE,
-                },
+                options={},
             )
         sub = subentries[0]
         return self.async_create_entry(
@@ -352,6 +349,7 @@ class StationSteps:
 
 class MonitorConfigFlow(StationSteps, ConfigFlow, domain=DOMAIN):
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input=None):
         await self.async_set_unique_id(DOMAIN)
@@ -429,7 +427,8 @@ class MonitorOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None):
         errors = {}
         if user_input is not None:
-            interval, max_age = user_input[CONF_INTERVAL], user_input[CONF_MAX_AGE]
+            interval = user_input.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+            max_age = user_input.get(CONF_MAX_AGE, DEFAULT_MAX_AGE)
             if (
                 interval != int(interval)
                 or max_age != int(max_age)
@@ -439,22 +438,19 @@ class MonitorOptionsFlow(OptionsFlow):
             ):
                 errors["base"] = "invalid_options"
             else:
-                return self.async_create_entry(
-                    data={
-                        CONF_INTERVAL: int(interval),
-                        CONF_MAX_AGE: int(max_age),
-                    }
-                )
+                options = dict(self.config_entry.options)
+                for key, value in ((CONF_INTERVAL, interval), (CONF_MAX_AGE, max_age)):
+                    if key in user_input:
+                        options[key] = int(value)
+                    else:
+                        options.pop(key, None)
+                return self.async_create_entry(data=options)
         fields = {}
-        for key, default, minimum, maximum in (
-            (CONF_INTERVAL, DEFAULT_INTERVAL, 5, 60),
-            (CONF_MAX_AGE, DEFAULT_MAX_AGE, 30, 1440),
+        for key, minimum, maximum in (
+            (CONF_INTERVAL, 5, 60),
+            (CONF_MAX_AGE, 30, 1440),
         ):
-            fields[
-                probatio.Required(
-                    key, default=self.config_entry.options.get(key, default)
-                )
-            ] = NumberSelector(
+            fields[probatio.Optional(key)] = NumberSelector(
                 NumberSelectorConfig(
                     min=minimum,
                     max=maximum,
@@ -466,5 +462,12 @@ class MonitorOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             errors=errors,
-            data_schema=probatio.Schema(fields),
+            description_placeholders={
+                "default_interval": str(DEFAULT_INTERVAL),
+                "default_max_age": str(DEFAULT_MAX_AGE),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields),
+                self.config_entry.options if user_input is None else user_input,
+            ),
         )
