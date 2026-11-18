@@ -60,9 +60,6 @@ For updates, update through HACS and restart Home Assistant.
 5. Confirm. Each station becomes one device under the central integration entry.
 
 Search selects **Home** when valid home coordinates exist.
-Home Assistant stores coordinates, not a street address. Click **X** to clear the
-selection and enter any other address or postal code. No home location is selected
-when coordinates are missing. DHL receives the chosen location only after submission.
 
 Use **Add station** on that entry to add further stations individually. Existing stations
 are excluded from search results. **Edit station** changes the displayed name and
@@ -72,7 +69,7 @@ remain under your control.
 
 Setup and **Add station** offer four optional compartment totals for S/M/L/XL.
 You can also enter them later under **Edit station > Compartment totals**.
-DHL supplies no totals per size. You can count compartments on site or from a clear
+DHL supplies no totals per size. You can count compartments on site or from a
 photo, then enter or change the numbers here at any time. Leave unknown sizes empty;
 0 means the station has no compartments of that size. Clearing a field removes its
 saved value. These numbers affect only the optional
@@ -94,19 +91,9 @@ Every station has nine entities:
 | Last successful poll | When Home Assistant last received and parsed a response successfully |
 | Problem | Diagnostic for failed, missing, stale or incomplete data |
 
-Zero means no free compartment of that size. `Unavailable` does not mean zero.
+Zero means no free compartment of that size.
 A missing size affects that size and the total; valid sizes remain usable if fresh.
-Counts support Home Assistant history and measurement statistics, not cumulative totals.
-
-The three diagnostic timestamps answer different questions: how old DHL's data is,
-when HA last tried to fetch it, and when a fetch last succeeded. A successful poll can
-still return stale or incomplete data and leave **Problem** active. A failed poll
-updates only the attempt time and retains the previous source and successful-poll times.
-Poll times describe the current integration run; they are not restored across restarts.
-The diagnostic's `reason` attribute distinguishes `cannot_connect`, `station_not_found`,
-`invalid_response`, `rate_limited`, `missing_data`, `missing_timestamp`, `future_timestamp`,
-`stale_data` and `missing_compartments`. Device entities also expose the public station
-identifier, number, postal code and address.
+Counts support Home Assistant history and measurement statistics.
 
 ## Options and updates
 
@@ -119,12 +106,11 @@ Global options apply to every station:
 
 The source timestamp is DHL's observation time, not the time of our HTTP request.
 The recommended 75-minute source age accommodates occasional hourly source updates
-plus the 15-minute polling interval. Both fields show their current recommendation.
-Leave either field empty to follow its recommendation, including future changes.
-Enter a number for a fixed value; clear it to restore recommended mode.
+plus the 15-minute polling interval.
+Leave either field empty to follow its recommendation.
 Counts expire at their configured age even between requests. Missing timestamps,
 timestamps without a timezone, and timestamps more than five minutes in the future
-make counts unavailable. A valid old timestamp remains visible for troubleshooting.
+make counts unavailable.
 
 Requests share a client and run sequentially. HTTP 429 pauses requests for at least
 15 minutes and honors a longer `Retry-After`, in seconds or HTTP-date form. Other
