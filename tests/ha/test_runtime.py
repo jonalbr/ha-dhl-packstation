@@ -208,7 +208,8 @@ async def test_expiry_without_http_and_invalid_future_source(
     # The source expires in five minutes; polling is still fifteen minutes away.
     observation = observations["1-10117407"]
     observations["1-10117407"] = replace(
-        observation, source_timestamp=dt_util.utcnow() - timedelta(minutes=55)
+        observation,
+        source_timestamp=dt_util.utcnow() - coordinator.max_age + timedelta(minutes=5),
     )
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -227,6 +228,30 @@ async def test_expiry_without_http_and_invalid_future_source(
     await hass.async_block_till_done()
     assert coordinator.problem == "future_timestamp"
     assert coordinator.last_source_timestamp == previous_timestamp
+
+
+async def test_default_age_tolerates_hourly_source_updates_then_expires(
+    hass, api, entry_factory, observations, freezer
+):
+    # No saved age option: use the integration default, including after upgrades.
+    entry = entry_factory(options={CONF_INTERVAL: 15})
+    observations["1-10117407"] = replace(
+        observations["1-10117407"],
+        source_timestamp=dt_util.utcnow() - timedelta(minutes=70),
+    )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data.coordinators["station_407"]
+    assert coordinator.max_age == timedelta(minutes=75)
+    assert states(hass, entry)["1-10117407_free_total"].state == "6"
+    assert coordinator.problem is None
+    before = api.station.await_count
+    freezer.move_to(dt_util.utcnow() + timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert api.station.await_count == before
+    assert states(hass, entry)["1-10117407_free_total"].state == "unavailable"
+    assert coordinator.problem == "stale_data"
 
 
 async def test_options_reload_once_and_preserve_ids(hass, api, entry_factory):
@@ -250,6 +275,21 @@ async def test_options_reload_once_and_preserve_ids(hass, api, entry_factory):
         assert reload_entry.await_count == 1
     assert entry.runtime_data.coordinators["station_407"].max_age == timedelta(
         minutes=90
+    )
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload_entry:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.options.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        assert reload_entry.await_count == 1
+    assert CONF_MAX_AGE not in entry.options
+    assert CONF_INTERVAL not in entry.options
+    assert entry.runtime_data.coordinators["station_407"].update_interval == timedelta(
+        minutes=15
+    )
+    assert entry.runtime_data.coordinators["station_407"].max_age == timedelta(
+        minutes=75
     )
     assert {
         item.unique_id: item.entity_id

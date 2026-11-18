@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 - 2026-11-18
+
+- Choose a Packstation device in the bundled card's graphical editor. Tapping the
+  card opens the device page; tapping its icon opens total-count details and history.
+  Existing card configurations remain supported.
+- Raise the default maximum source age to 75 minutes to accommodate occasional
+  hourly DHL updates and the polling interval. Migrate the old 60-minute default
+  to recommended mode.
+- Translate public station metadata labels in English and German.
+- Refresh development dependencies for HA 2026.11.2 and its matching frontend;
+  update CI to uv 0.13.9 and Node.js 26 LTS.
+
 ## 0.2.0 - 2026-11-15
 
 - Add a bundled DHL Packstation dashboard card with graphical station selection and

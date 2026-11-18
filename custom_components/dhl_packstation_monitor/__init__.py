@@ -53,6 +53,20 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Move the original age default to the current recommendation once."""
+    from .const import CONF_MAX_AGE
+
+    if entry.version > 1:
+        return False
+    if entry.minor_version < 2:
+        options = dict(entry.options)
+        if options.get(CONF_MAX_AGE) == 60:
+            options.pop(CONF_MAX_AGE)
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry[MonitorRuntime]
 ) -> bool:

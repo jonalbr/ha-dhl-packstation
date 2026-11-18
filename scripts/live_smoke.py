@@ -271,23 +271,23 @@ def run():
             assert (
                 diagnostics[0]["attributes"]["display_capacities"] == manual_capacities
             )
-            variants = (
-                "compartment_summary",
-                "compartment_total_summary",
-                "compartment_capacity_summary",
+            variants = {
+                "free": "compartment_summary",
+                "total": "compartment_total_summary",
+                "capacities": "compartment_capacity_summary",
+            }
+            preview_device = next(
+                entity["device_id"]
+                for entity in own_entities
+                if entity["entity_id"] == diagnostics[0]["entity_id"]
             )
             cards = [
                 {
-                    "type": "tile",
-                    "entity": state["entity_id"],
-                    "state_content": variant,
-                    "name": "Packstation " + state["attributes"]["station_number"],
-                    "color": "amber",
-                    "icon": "mdi:package-variant-closed",
-                    "tap_action": {"action": "more-info"},
+                    "type": "custom:dhl-packstation-card",
+                    "device_id": preview_device,
+                    "display_mode": mode,
                 }
-                for variant in variants
-                for state in diagnostics[:1]
+                for mode in variants
             ]
             (config / "ui-lovelace.yaml").write_text(
                 json.dumps(
@@ -332,7 +332,7 @@ def run():
                     )
                     suffix = "-dark" if scheme == "dark" else ""
                     page.set_viewport_size({"width": 1280, "height": 800})
-                    for index, variant in enumerate(variants):
+                    for index, variant in enumerate(variants.values()):
                         card = page.locator("hui-tile-card").nth(index)
                         card.get_by_text(
                             diagnostics[0]["attributes"][variant], exact=True
@@ -349,7 +349,7 @@ def run():
                         path=str(artifacts / f"tile-mobile{suffix}.png"),
                         animations="disabled",
                     )
-                    for index, variant in enumerate(variants):
+                    for index, variant in enumerate(variants.values()):
                         page.locator("hui-tile-card").nth(index).screenshot(
                             path=str(artifacts / f"{variant}-mobile{suffix}.png"),
                             animations="disabled",
@@ -370,15 +370,6 @@ def run():
                         },
                     )
                 assert tile_backgrounds["light"] != tile_backgrounds["dark"]
-                try:
-                    tile.click(timeout=10000)
-                    page.locator("ha-more-info-dialog").get_by_text(
-                        "Problem", exact=True
-                    ).first.wait_for(state="visible", timeout=10000)
-                except Exception:
-                    page.screenshot(path=str(artifacts / "more-info-failure.png"))
-                    print(page.get_by_role("button").all_text_contents(), flush=True)
-                    raise
                 page.set_viewport_size({"width": 1280, "height": 900})
                 try:
                     page.goto(base + "/dhl-card-test/0")
@@ -423,9 +414,9 @@ def run():
                         "Near home", exact=True
                     ).wait_for(state="visible")
                     name_input.fill("")
-                    editor.locator("ha-entity-picker").click()
-                    entity_search = page.locator("ha-picker-combo-box input")
-                    entity_search.fill(diagnostics[1]["entity_id"])
+                    editor.locator("ha-device-picker").click()
+                    device_search = page.locator("ha-picker-combo-box input")
+                    device_search.fill(subentries[1]["title"])
                     page.get_by_text(subentries[1]["title"], exact=True).last.click()
                     page.locator("dhl-packstation-card").get_by_text(
                         diagnostics[1]["attributes"]["compartment_capacity_summary"],
@@ -435,8 +426,14 @@ def run():
                     page.get_by_role("button", name="Done", exact=True).click()
                     custom_card = page.locator("dhl-packstation-card")
                     custom_card.wait_for(state="visible")
-                    card_entity = custom_card.evaluate("el => el._config.entity")
-                    assert card_entity == diagnostics[1]["entity_id"]
+                    card_device = custom_card.evaluate("el => el._config.device_id")
+                    assert custom_card.evaluate("el => el._config.entity") is None
+                    card_entity = diagnostics[1]["entity_id"]
+                    assert card_device == next(
+                        entity["device_id"]
+                        for entity in own_entities
+                        if entity["entity_id"] == card_entity
+                    )
                     state = call("GET", "/api/states/" + card_entity)
                     custom_card.get_by_text(
                         state["attributes"]["compartment_capacity_summary"], exact=True
@@ -455,9 +452,26 @@ def run():
                                 animations="disabled",
                             )
                             assert custom_card.bounding_box()["width"] <= width
-                    custom_card.click()
+                    custom_card.locator("ha-tile-icon").click()
                     page.locator("ha-more-info-dialog").get_by_text(
-                        "Problem", exact=True
+                        "Free compartments total", exact=True
+                    ).first.wait_for(state="visible")
+                    page.locator("ha-more-info-dialog").get_by_role(
+                        "button", name=subentries[1]["title"], exact=True
+                    ).wait_for(state="visible")
+                    page.goto(base + "/dhl-card-test/0")
+                    custom_card.get_by_role(
+                        "button",
+                        name=(
+                            subentries[1]["title"]
+                            + " "
+                            + state["attributes"]["compartment_capacity_summary"]
+                        ),
+                        exact=True,
+                    ).click()
+                    page.wait_for_url(base + "/config/devices/device/" + card_device)
+                    page.get_by_text(
+                        "Free compartments total", exact=True
                     ).first.wait_for(state="visible")
                 except Exception:
                     page.screenshot(path=str(artifacts / "dhl-card-ui-failure.png"))
@@ -466,6 +480,47 @@ def run():
                 page.set_viewport_size({"width": 1280, "height": 900})
                 page.goto(base + "/config/integrations/integration/" + DOMAIN)
                 try:
+                    for value in ("90", ""):
+                        page.get_by_role(
+                            "button", name="Configure", exact=True
+                        ).first.click()
+                        page.get_by_text("Global updates", exact=True).wait_for(
+                            state="visible"
+                        )
+                        age = page.locator('input[type="number"]').nth(1)
+                        interval = page.locator('input[type="number"]').first
+                        expect(age).to_have_value("" if value else "90")
+                        expect(interval).to_have_value("" if value else "30")
+                        page.get_by_text(
+                            "Recommended: 75 minutes.",
+                            exact=False,
+                        ).wait_for(state="visible")
+                        page.get_by_text(
+                            "Recommended: 15 minutes.",
+                            exact=False,
+                        ).wait_for(state="visible")
+                        age.fill(value)
+                        interval.fill("30" if value else "")
+                        page.get_by_role("button", name="Submit", exact=True).click()
+                        page.get_by_text("Global updates", exact=True).wait_for(
+                            state="hidden"
+                        )
+                        page.get_by_role("button", name="Finish", exact=True).click()
+                    page.get_by_role(
+                        "button", name="Configure", exact=True
+                    ).first.click()
+                    age = page.locator('input[type="number"]').nth(1)
+                    expect(age).to_have_value("")
+                    expect(page.locator('input[type="number"]').first).to_have_value("")
+                    page.screenshot(
+                        path=str(artifacts / "recommended-settings.png"),
+                        animations="disabled",
+                    )
+                    page.get_by_role("button", name="Submit", exact=True).click()
+                    page.get_by_text("Global updates", exact=True).wait_for(
+                        state="hidden"
+                    )
+                    page.get_by_role("button", name="Finish", exact=True).click()
                     page.locator("ha-button").filter(
                         has_text="Add station"
                     ).first.click(timeout=15000)
@@ -555,13 +610,16 @@ def run():
                 ],
                 "tile_desktop": True,
                 "tile_mobile": True,
-                "tile_variants": list(variants),
+                "card_display_modes": list(variants),
                 "tile_color_schemes": tile_backgrounds,
                 "custom_card_picker": True,
                 "custom_card_visual_editor": True,
                 "custom_card_station_selection": True,
+                "custom_card_device_navigation": True,
+                "custom_card_total_history": True,
                 "custom_card_mobile_and_desktop": True,
                 "custom_card_light_and_dark": True,
+                "recommended_settings_clearable": True,
                 "more_info": True,
                 "home_location_clear": True,
                 "home_location_replace": True,

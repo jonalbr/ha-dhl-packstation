@@ -1,9 +1,0 @@
-# Per-size denominators are optional manual display values from Edit station.
-type: tile
-entity: binary_sensor.replace_with_your_station_problem
-name: Packstation 407
-icon: mdi:package-variant-closed
-color: amber
-state_content: compartment_capacity_summary
-tap_action:
-  action: more-info
